@@ -1,0 +1,73 @@
+name: Wela
+options:
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+configFiles:
+  Debug: Config/Base.xcconfig
+  Release: Config/Base.xcconfig
+packages:
+  WelaCore:
+    path: Packages/WelaCore
+  WelaSync:
+    path: Packages/WelaSync
+  WelaUI:
+    path: Packages/WelaUI
+  KeyboardShortcuts:
+    url: https://github.com/sindresorhus/KeyboardShortcuts
+    from: 2.0.0
+targets:
+  Wela:
+    type: application
+    platform: macOS
+    sources:
+      - App
+    dependencies:
+      - package: WelaCore
+      - package: WelaSync
+      - package: WelaUI
+      - package: KeyboardShortcuts
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleName: Wela
+        CFBundleDisplayName: Wela Calendar
+        LSUIElement: true
+        LSMinimumSystemVersion: "14.0"
+        CFBundleURLTypes:
+          - CFBundleURLName: google-oauth-redirect
+            CFBundleURLSchemes:
+              - $(GOOGLE_REDIRECT_SCHEME)
+    entitlements:
+      path: App/Wela.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.network.client: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(WELA_BUNDLE_ID)
+        PRODUCT_NAME: Wela
+        ARCHS: "$(ARCHS_STANDARD)"
+        ENABLE_HARDENED_RUNTIME: true
+        GENERATE_INFOPLIST_FILE: false
+  WelaAppTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - AppTests
+    dependencies:
+      - target: Wela
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(WELA_BUNDLE_ID).tests
+schemes:
+  Wela:
+    build:
+      targets:
+        Wela: all
+    run:
+      commandLineArguments:
+        "-UseMockData": true
+    test:
+      targets:
+        - WelaAppTests
