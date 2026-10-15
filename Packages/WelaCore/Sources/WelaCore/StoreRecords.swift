@@ -7,25 +7,25 @@ extension EventStatus: DatabaseValueConvertible {}
 extension ConferenceKind: DatabaseValueConvertible {}
 
 extension Account: FetchableRecord, PersistableRecord {
-  static var databaseTableName: String { "account" }
+  public static var databaseTableName: String { "account" }
 }
 
 extension CalendarInfo: FetchableRecord, PersistableRecord {
-  static var databaseTableName: String { "calendar" }
+  public static var databaseTableName: String { "calendar" }
 }
 
 extension EventInstance: FetchableRecord, PersistableRecord {
-  static var databaseTableName: String { "event_instance" }
+  public static var databaseTableName: String { "event_instance" }
 }
 
 extension SyncState: FetchableRecord, PersistableRecord {
-  static var databaseTableName: String { "sync_state" }
+  public static var databaseTableName: String { "sync_state" }
 }
 
 extension OutboxItem: FetchableRecord, MutablePersistableRecord {
-  static var databaseTableName: String { "outbox" }
+  public static var databaseTableName: String { "outbox" }
 
-  mutating func didInsert(_ inserted: InsertionSuccess) {
+  public mutating func didInsert(_ inserted: InsertionSuccess) {
     id = inserted.rowID
   }
 }

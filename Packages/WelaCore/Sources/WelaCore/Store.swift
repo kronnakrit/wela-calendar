@@ -203,6 +203,22 @@ public final class Store: @unchecked Sendable {
     }
   }
 
+  public func observeCalendars() -> AsyncStream<[CalendarInfo]> {
+    let queue = dbQueue
+    let observation = ValueObservation.tracking { db in
+      try CalendarInfo.order(Column("name")).fetchAll(db)
+    }
+    return AsyncStream { continuation in
+      let task = Task {
+        do {
+          for try await value in observation.values(in: queue) { continuation.yield(value) }
+        } catch {}
+        continuation.finish()
+      }
+      continuation.onTermination = { _ in task.cancel() }
+    }
+  }
+
   // MARK: Search
 
   /// Full-text search over title, location, notes and attendees, grouped by day.

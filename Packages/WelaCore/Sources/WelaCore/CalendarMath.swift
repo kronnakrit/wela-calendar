@@ -25,9 +25,9 @@ public enum CalendarMath {
     }
   }
 
-  /// Weekday symbols ordered from the calendar's first weekday (e.g. "S M T …").
+  /// Weekday symbols ordered from the calendar's first weekday (e.g. "Sun Mon …").
   public static func weekdaySymbols(calendar: Calendar) -> [String] {
-    let symbols = calendar.veryShortStandaloneWeekdaySymbols
+    let symbols = calendar.shortStandaloneWeekdaySymbols
     let first = calendar.firstWeekday - 1
     return Array(symbols[first...] + symbols[..<first])
   }

@@ -52,6 +52,6 @@ final class CalendarMathTests: XCTestCase {
   func testWeekdaySymbolsStartAtFirstWeekday() {
     let cal = makeCalendar(firstWeekday: 2, timeZone: "UTC")
     XCTAssertEqual(CalendarMath.weekdaySymbols(calendar: cal).count, 7)
-    XCTAssertEqual(CalendarMath.weekdaySymbols(calendar: cal).first, "M")
+    XCTAssertEqual(CalendarMath.weekdaySymbols(calendar: cal).first, "Mon")
   }
 }
