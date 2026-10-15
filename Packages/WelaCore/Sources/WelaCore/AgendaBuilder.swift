@@ -16,6 +16,12 @@ public struct AgendaItem: Identifiable, Hashable, Sendable {
   /// "Day 2 of 3" for multi-day events, nil otherwise.
   public let multiDayLabel: String?
   public var id: String { event.id }
+
+  public init(event: EventInstance, isCancelled: Bool, multiDayLabel: String?) {
+    self.event = event
+    self.isCancelled = isCancelled
+    self.multiDayLabel = multiDayLabel
+  }
 }
 
 public struct Agenda: Hashable, Sendable {
