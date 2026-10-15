@@ -60,6 +60,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(WELA_BUNDLE_ID).tests
+        GENERATE_INFOPLIST_FILE: true
 schemes:
   Wela:
     build:
