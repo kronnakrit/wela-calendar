@@ -4,25 +4,27 @@ Tick a milestone's boxes only when its **Done when** checks pass (see `IMPLEMENT
 
 ## M0. Scaffold
 
-- [ ] `project.yml`:
-- [ ] `Info.plist`: `LSUIElement = YES`, plus a URL scheme for the Google redirect (from xcconfig).
-- [ ] Entitlements:
-- [ ] `Config/Base.xcconfig` pulls in secrets with an **optional** include (`#include? "Secrets.xcconfig"`), so a cl
-- [ ] `Makefile` targets:
-- [ ] `docs/PROGRESS.md` with every milestone checklist copied in; empty `DECISIONS.md` and `MANUAL_TESTS.md`.
-- [ ] `.gitignore`: `*.xcodeproj` (generated), `Config/Secrets.xcconfig`, `DerivedData`, `.build`.
+- [x] `project.yml`:
+- [x] `Info.plist`: `LSUIElement = YES`, plus a URL scheme for the Google redirect (from xcconfig).
+- [x] Entitlements:
+- [x] `Config/Base.xcconfig` pulls in secrets with an **optional** include (`#include? "Secrets.xcconfig"`), so a cl
+- [x] `Makefile` targets:
+- [x] `docs/PROGRESS.md` with every milestone checklist copied in; empty `DECISIONS.md` and `MANUAL_TESTS.md`.
+- [x] `.gitignore`: `*.xcodeproj` (generated), `Config/Secrets.xcconfig`, `DerivedData`, `.build`.
 
 ## M1. Core: model, calendar math, store
 
-- [ ] Models from section 4 in `WelaCore`.
-- [ ] `CalendarMath`:
-- [ ] `AgendaBuilder`: for a given day and set of visible calendars, returns sections:
-- [ ] `DotSummary`: for each day, up to 4 calendar colours ordered by start time. More than 4 shows no extra mark (d
-- [ ] `JoinLinkParser`. Order of precedence:
-- [ ] `Store` (GRDB):
-- [ ] `HTMLStripper` for event notes (Graph returns HTML bodies).
+- [x] Models from section 4 in `WelaCore`.
+- [x] `CalendarMath`:
+- [x] `AgendaBuilder`: for a given day and set of visible calendars, returns sections:
+- [x] `DotSummary`: for each day, up to 4 calendar colours ordered by start time. More than 4 shows no extra mark (d
+- [x] `JoinLinkParser`. Order of precedence:
+- [x] `Store` (GRDB):
+- [x] `HTMLStripper` for event notes (Graph returns HTML bodies).
 
 ## M2. Panel shell with mock data
+
+Code complete and CI-green; waiting on the manual checks in `MANUAL_TESTS.md` (visual match, timing, VoiceOver) before ticking.
 
 - [ ] `StatusItemController`:
 - [ ] `PanelController`:
