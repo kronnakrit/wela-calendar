@@ -16,8 +16,13 @@ jobs:
       - name: Package tests
         run: |
           for p in Packages/WelaCore Packages/WelaSync Packages/WelaUI; do
-            swift test --package-path "$p"
+            WELA_SCREENSHOT_DIR="$PWD/screenshots" swift test --package-path "$p"
           done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: screenshots/*.png
+          if-no-files-found: warn
       - name: Generate project
         run: cp Config/Secrets.example.xcconfig Config/Secrets.xcconfig && xcodegen generate
       - name: Build and test app
