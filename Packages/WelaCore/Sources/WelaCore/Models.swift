@@ -59,9 +59,13 @@ public enum ResponseStatus: String, Codable, Hashable, Sendable {
   case accepted, tentative, declined, notResponded, organizer, none
 }
 
-public enum EventStatus: String, Codable, Hashable, Sendable { case confirmed, tentative, cancelled }
+public enum EventStatus: String, Codable, Hashable, Sendable {
+  case confirmed, tentative, cancelled
+}
 
-public enum ConferenceKind: String, Codable, Hashable, Sendable { case teams, meet, zoom, webex, other }
+public enum ConferenceKind: String, Codable, Hashable, Sendable {
+  case teams, meet, zoom, webex, other
+}
 
 public struct Attendee: Codable, Hashable, Sendable {
   public var name: String

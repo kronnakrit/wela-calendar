@@ -17,11 +17,15 @@ struct MonthHeader: View {
       .accessibilityLabel("\(vm.monthName) \(vm.yearString)")
       .accessibilityHint("Jump to today")
       Spacer()
-      Button { vm.moveMonth(by: -1) } label: {
+      Button {
+        vm.moveMonth(by: -1)
+      } label: {
         Image(systemName: "chevron.left").frame(width: 24, height: 24)
       }
       .accessibilityLabel("Previous month")
-      Button { vm.moveMonth(by: 1) } label: {
+      Button {
+        vm.moveMonth(by: 1)
+      } label: {
         Image(systemName: "chevron.right").frame(width: 24, height: 24)
       }
       .accessibilityLabel("Next month")
@@ -37,7 +41,9 @@ struct MonthGrid: View {
 
   var body: some View {
     let cells = vm.gridCells
-    let rows = stride(from: 0, to: cells.count, by: 7).map { Array(cells[$0..<min($0 + 7, cells.count)]) }
+    let rows = stride(from: 0, to: cells.count, by: 7).map {
+      Array(cells[$0..<min($0 + 7, cells.count)])
+    }
     VStack(spacing: 0) {
       HStack(spacing: 0) {
         ForEach(Array(vm.weekdaySymbols.enumerated()), id: \.offset) { index, symbol in
@@ -54,7 +60,8 @@ struct MonthGrid: View {
         HStack(spacing: 0) {
           ForEach(row) { cell in
             DayCellView(
-              cell: cell, vm: vm, isSelected: vm.calendar.isDate(cell.date, inSameDayAs: vm.selectedDay)
+              cell: cell, vm: vm,
+              isSelected: vm.calendar.isDate(cell.date, inSameDayAs: vm.selectedDay)
             )
           }
         }
@@ -110,8 +117,12 @@ struct DayCellView: View {
     .simultaneousGesture(
       TapGesture(count: 2).onEnded {
         vm.select(day: cell.date)
-        if let first = vm.agendaItems.first { vm.selectedEventID = first.id; vm.openSelectedEvent() }
-      })
+        if let first = vm.agendaItems.first {
+          vm.selectedEventID = first.id
+          vm.openSelectedEvent()
+        }
+      }
+    )
     .accessibilityLabel(label(count: count))
     .accessibilityAddTraits(isSelected ? .isSelected : [])
   }

@@ -15,7 +15,8 @@ final class PanelViewModelTests: XCTestCase {
   private func makeVM() throws -> (PanelViewModel, Store) {
     let store = try Store()
     let now = cal.date(from: DateComponents(year: 2026, month: 10, day: 14, hour: 10, minute: 20))!
-    let vm = PanelViewModel(store: store, calendar: cal, locale: Locale(identifier: "en_US"), now: now)
+    let vm = PanelViewModel(
+      store: store, calendar: cal, locale: Locale(identifier: "en_US"), now: now)
     return (vm, store)
   }
 
@@ -50,13 +51,18 @@ final class PanelViewModelTests: XCTestCase {
   func testEventSelectionClampsAtEnds() async throws {
     let (vm, store) = try makeVM()
     let account = Account(id: "a", provider: .mock, email: "x", displayName: "x")
-    let calInfo = CalendarInfo(accountId: "a", providerCalendarId: "c", name: "C", providerColorHex: "#3D5A96")
+    let calInfo = CalendarInfo(
+      accountId: "a", providerCalendarId: "c", name: "C", providerColorHex: "#3D5A96")
     try store.saveAccount(account)
     try store.saveCalendars([calInfo])
     let start = cal.date(from: DateComponents(year: 2026, month: 10, day: 14, hour: 9))!
     try store.upsertEvents([
-      EventInstance(calendarId: calInfo.id, providerEventId: "1", title: "One", start: start, end: start.addingTimeInterval(3600)),
-      EventInstance(calendarId: calInfo.id, providerEventId: "2", title: "Two", start: start.addingTimeInterval(7200), end: start.addingTimeInterval(10800)),
+      EventInstance(
+        calendarId: calInfo.id, providerEventId: "1", title: "One", start: start,
+        end: start.addingTimeInterval(3600)),
+      EventInstance(
+        calendarId: calInfo.id, providerEventId: "2", title: "Two",
+        start: start.addingTimeInterval(7200), end: start.addingTimeInterval(10800)),
     ])
     for _ in 0..<50 where vm.agendaItems.count < 2 { try await Task.sleep(nanoseconds: 50_000_000) }
     XCTAssertEqual(vm.agendaItems.count, 2)

@@ -23,7 +23,8 @@ extension Color {
         name: nil,
         dynamicProvider: { appearance in
           let isDark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-          return isDark ? NSColor(hex: dark, alpha: darkAlpha) : NSColor(hex: light, alpha: lightAlpha)
+          return isDark
+            ? NSColor(hex: dark, alpha: darkAlpha) : NSColor(hex: light, alpha: lightAlpha)
         }))
   }
 }

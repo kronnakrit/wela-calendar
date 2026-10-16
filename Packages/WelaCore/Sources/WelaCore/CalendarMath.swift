@@ -9,7 +9,8 @@ public struct DayCell: Identifiable, Hashable, Sendable {
 
 public enum CalendarMath {
   /// A 6×7 grid covering the month containing `month`. First weekday comes from `calendar`.
-  public static func monthGrid(for month: Date, calendar: Calendar, now: Date = Date()) -> [DayCell] {
+  public static func monthGrid(for month: Date, calendar: Calendar, now: Date = Date()) -> [DayCell]
+  {
     guard let monthStart = calendar.dateInterval(of: .month, for: month)?.start else { return [] }
     let weekday = calendar.component(.weekday, from: monthStart)
     let offset = (weekday - calendar.firstWeekday + 7) % 7
@@ -21,7 +22,8 @@ public enum CalendarMath {
       guard let date = calendar.date(byAdding: .day, value: i, to: gridStart) else { return nil }
       let c = calendar.dateComponents([.era, .year, .month], from: date)
       return DayCell(
-        date: date, isInMonth: c == monthComponents, isToday: calendar.isDate(date, inSameDayAs: now))
+        date: date, isInMonth: c == monthComponents,
+        isToday: calendar.isDate(date, inSameDayAs: now))
     }
   }
 
@@ -46,7 +48,9 @@ public enum CalendarMath {
     "\(monthName(for: date, calendar: calendar, locale: locale)) \(yearString(for: date, calendar: calendar, locale: locale))"
   }
 
-  private static func format(_ date: Date, _ pattern: String, _ calendar: Calendar, _ locale: Locale)
+  private static func format(
+    _ date: Date, _ pattern: String, _ calendar: Calendar, _ locale: Locale
+  )
     -> String
   {
     let f = DateFormatter()

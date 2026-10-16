@@ -6,8 +6,11 @@ final class StoreTests: XCTestCase {
   let utc = makeCalendar(timeZone: "UTC")
   var store: Store!
   let account = Account(id: "a", provider: .microsoft, email: "me@example.com", displayName: "Me")
-  let cal1 = CalendarInfo(accountId: "a", providerCalendarId: "1", name: "Work", providerColorHex: "#3D5A96", canEdit: true)
-  let cal2 = CalendarInfo(accountId: "a", providerCalendarId: "2", name: "Home", providerColorHex: "#5F8A5E")
+  let cal1 = CalendarInfo(
+    accountId: "a", providerCalendarId: "1", name: "Work", providerColorHex: "#3D5A96",
+    canEdit: true)
+  let cal2 = CalendarInfo(
+    accountId: "a", providerCalendarId: "2", name: "Home", providerColorHex: "#5F8A5E")
 
   override func setUpWithError() throws {
     store = try Store()
@@ -15,15 +18,22 @@ final class StoreTests: XCTestCase {
     try store.saveCalendars([cal1, cal2])
   }
 
-  private func event(_ id: String, cal: CalendarInfo? = nil, h: Int, title: String = "Standup", attendees: [Attendee] = []) -> EventInstance {
-    var e = timedEvent(id, calendar: (cal ?? cal1).id, start: date(2026, 10, 14, h, in: utc), end: date(2026, 10, 14, h + 1, in: utc), title: title)
+  private func event(
+    _ id: String, cal: CalendarInfo? = nil, h: Int, title: String = "Standup",
+    attendees: [Attendee] = []
+  ) -> EventInstance {
+    var e = timedEvent(
+      id, calendar: (cal ?? cal1).id, start: date(2026, 10, 14, h, in: utc),
+      end: date(2026, 10, 14, h + 1, in: utc), title: title)
     e.attendees = attendees
     e.joinURL = URL(string: "https://meet.google.com/abc-defg-hij")
     e.conferenceKind = .meet
     return e
   }
 
-  private var october: DateInterval { DateInterval(start: date(2026, 10, 1, in: utc), end: date(2026, 11, 1, in: utc)) }
+  private var october: DateInterval {
+    DateInterval(start: date(2026, 10, 1, in: utc), end: date(2026, 11, 1, in: utc))
+  }
 
   func testAccountAndCalendarRoundTrip() throws {
     XCTAssertEqual(try store.accounts(), [account])
@@ -39,7 +49,9 @@ final class StoreTests: XCTestCase {
   }
 
   func testEventInsertUpdateDelete() throws {
-    var e = event("e1", h: 9, attendees: [Attendee(name: "Ada Lovelace", email: "ada@example.com", response: .accepted)])
+    var e = event(
+      "e1", h: 9,
+      attendees: [Attendee(name: "Ada Lovelace", email: "ada@example.com", response: .accepted)])
     try store.upsertEvents([e])
     XCTAssertEqual(try store.event(id: e.id), e)
 
@@ -56,12 +68,17 @@ final class StoreTests: XCTestCase {
   }
 
   func testAllDayEventRoundTripKeepsDates() throws {
-    let e = EventInstance.allDay(calendarId: cal1.id, providerEventId: "h", title: "Holiday", startDay: "2026-10-14", endDay: "2026-10-15")
+    let e = EventInstance.allDay(
+      calendarId: cal1.id, providerEventId: "h", title: "Holiday", startDay: "2026-10-14",
+      endDay: "2026-10-15")
     try store.upsertEvents([e])
     let loaded = try store.event(id: e.id)
     XCTAssertEqual(loaded?.startDay, "2026-10-14")
     XCTAssertEqual(loaded?.endDay, "2026-10-15")
-    XCTAssertEqual(try store.events(in: DateInterval(start: date(2026, 10, 14, in: utc), end: date(2026, 10, 15, in: utc))).count, 1)
+    XCTAssertEqual(
+      try store.events(
+        in: DateInterval(start: date(2026, 10, 14, in: utc), end: date(2026, 10, 15, in: utc))
+      ).count, 1)
   }
 
   func testRangeAndCalendarFilter() throws {
@@ -75,14 +92,17 @@ final class StoreTests: XCTestCase {
 
   func testFullTextSearchFindsAttendeeName() throws {
     try store.upsertEvents([
-      event("a", h: 9, title: "Planning", attendees: [Attendee(name: "Grace Hopper", email: "grace@navy.mil")]),
+      event(
+        "a", h: 9, title: "Planning",
+        attendees: [Attendee(name: "Grace Hopper", email: "grace@navy.mil")]),
       event("b", h: 11, title: "Lunch"),
     ])
     let groups = try store.search("hop", in: october, calendar: utc)
     XCTAssertEqual(groups.count, 1)
     XCTAssertEqual(groups.first?.events.map(\.providerEventId), ["a"])
     XCTAssertEqual(groups.first?.day, date(2026, 10, 14, in: utc))
-    XCTAssertEqual(try store.search("lunch", in: october, calendarIds: [cal2.id], calendar: utc).count, 0)
+    XCTAssertEqual(
+      try store.search("lunch", in: october, calendarIds: [cal2.id], calendar: utc).count, 0)
     XCTAssertTrue(try store.search("   ", in: october, calendar: utc).isEmpty)
   }
 
@@ -98,11 +118,14 @@ final class StoreTests: XCTestCase {
   }
 
   func testSyncStateAndOutbox() throws {
-    let state = SyncState(calendarId: cal1.id, deltaLink: "https://graph/delta?token=1", windowStart: date(2026, 7, 1, in: utc), windowEnd: date(2027, 10, 1, in: utc))
+    let state = SyncState(
+      calendarId: cal1.id, deltaLink: "https://graph/delta?token=1",
+      windowStart: date(2026, 7, 1, in: utc), windowEnd: date(2027, 10, 1, in: utc))
     try store.saveSyncState(state)
     XCTAssertEqual(try store.syncState(calendarId: cal1.id)?.deltaLink, state.deltaLink)
 
-    let queued = try store.enqueue(OutboxItem(accountId: "a", eventId: "x", action: "accept", payload: Data([1, 2])))
+    let queued = try store.enqueue(
+      OutboxItem(accountId: "a", eventId: "x", action: "accept", payload: Data([1, 2])))
     XCTAssertNotNil(queued.id)
     XCTAssertEqual(try store.pendingOutbox().map(\.payload), [Data([1, 2])])
     try store.removeOutboxItem(id: queued.id!)

@@ -101,8 +101,12 @@ public final class PanelViewModel: ObservableObject {
     CalendarMath.monthGrid(for: displayedMonth, calendar: calendar, now: now)
   }
 
-  public var monthName: String { CalendarMath.monthName(for: displayedMonth, calendar: calendar, locale: locale) }
-  public var yearString: String { CalendarMath.yearString(for: displayedMonth, calendar: calendar, locale: locale) }
+  public var monthName: String {
+    CalendarMath.monthName(for: displayedMonth, calendar: calendar, locale: locale)
+  }
+  public var yearString: String {
+    CalendarMath.yearString(for: displayedMonth, calendar: calendar, locale: locale)
+  }
   public var weekdaySymbols: [String] { CalendarMath.weekdaySymbols(calendar: calendar) }
 
   /// Index (in grid order) of today's weekday, to tint its label.
@@ -132,7 +136,10 @@ public final class PanelViewModel: ObservableObject {
   public var agenda: Agenda { agendaFor(selectedDay) }
 
   /// All-day items first, then timed; the order used for Up/Down navigation.
-  var agendaItems: [AgendaItem] { let a = agenda; return a.allDay + a.timed }
+  var agendaItems: [AgendaItem] {
+    let a = agenda
+    return a.allDay + a.timed
+  }
 
   var nowItem: AgendaItem? {
     guard calendar.isDate(selectedDay, inSameDayAs: now) else { return nil }
@@ -223,7 +230,11 @@ public final class PanelViewModel: ObservableObject {
     guard !items.isEmpty else { return }
     let current = items.firstIndex { $0.id == selectedEventID }
     let next: Int
-    if let current { next = min(max(current + n, 0), items.count - 1) } else { next = n >= 0 ? 0 : items.count - 1 }
+    if let current {
+      next = min(max(current + n, 0), items.count - 1)
+    } else {
+      next = n >= 0 ? 0 : items.count - 1
+    }
     selectedEventID = items[next].id
   }
 

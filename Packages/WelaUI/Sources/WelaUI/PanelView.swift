@@ -14,7 +14,8 @@ public struct PanelView: View {
   public var body: some View {
     ZStack {
       if let id = vm.detailEventID, let event = vm.event(id: id) {
-        EventDetailView(vm: vm, event: event).transition(.move(edge: .trailing).combined(with: .opacity))
+        EventDetailView(vm: vm, event: event).transition(
+          .move(edge: .trailing).combined(with: .opacity))
       } else {
         main.transition(.opacity)
       }
@@ -23,7 +24,9 @@ public struct PanelView: View {
     .frame(width: 340, height: 640)
     .background(Theme.page)
     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Theme.rule, lineWidth: 1))
+    .overlay(
+      RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Theme.rule, lineWidth: 1)
+    )
     .background(shortcuts)
     .focusable()
     .focused($focus, equals: .main)
@@ -31,7 +34,8 @@ public struct PanelView: View {
     .onKeyPress(phases: [.down, .repeat]) { press in handle(press) }
     .onAppear { focus = .main }
     .onReceive(minuteTimer) { _ in vm.tick() }
-    .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("WelaPanelDidOpen"))) { _ in
+    .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("WelaPanelDidOpen"))) {
+      _ in
       focus = .main
     }
   }
@@ -120,8 +124,12 @@ struct SearchField: View {
         .focused(focus, equals: .search)
         .accessibilityLabel("Search events")
       if !text.isEmpty {
-        Button { text = "" } label: { Image(systemName: "xmark.circle.fill") }
-          .buttonStyle(.plain).foregroundStyle(Theme.softInk).accessibilityLabel("Clear search")
+        Button {
+          text = ""
+        } label: {
+          Image(systemName: "xmark.circle.fill")
+        }
+        .buttonStyle(.plain).foregroundStyle(Theme.softInk).accessibilityLabel("Clear search")
       }
     }
     .padding(.horizontal, 10).padding(.vertical, 7)
@@ -165,7 +173,9 @@ struct FooterView: View {
       .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
       .accessibilityLabel("Calendar filter")
       Spacer()
-      Button { vm.onOpenSettings?() } label: {
+      Button {
+        vm.onOpenSettings?()
+      } label: {
         Image(systemName: "gearshape").frame(width: 24, height: 24)
       }
       .buttonStyle(.plain).foregroundStyle(Theme.softInk)
@@ -183,7 +193,9 @@ struct EventDetailView: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
-      Button { vm.closeDetail() } label: {
+      Button {
+        vm.closeDetail()
+      } label: {
         Label("Back", systemImage: "chevron.left").welaFont(12)
       }
       .buttonStyle(.plain).foregroundStyle(Theme.softInk)
@@ -198,9 +210,12 @@ struct EventDetailView: View {
         Label(loc, systemImage: "mappin.and.ellipse").welaFont(12).foregroundStyle(Theme.softInk)
       }
       if event.joinURL != nil {
-        Button { vm.join(event) } label: {
+        Button {
+          vm.join(event)
+        } label: {
           Text("Join").welaFont(12, weight: .semibold).foregroundStyle(Theme.onBlue)
-            .padding(.horizontal, 18).padding(.vertical, 6).background(Capsule().fill(Theme.blueInk))
+            .padding(.horizontal, 18).padding(.vertical, 6).background(
+              Capsule().fill(Theme.blueInk))
         }
         .buttonStyle(.plain)
       }

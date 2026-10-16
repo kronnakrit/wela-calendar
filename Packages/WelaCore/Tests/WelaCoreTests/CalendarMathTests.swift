@@ -5,7 +5,8 @@ import XCTest
 final class CalendarMathTests: XCTestCase {
   func testOctober2026SundayFirst() {
     let cal = makeCalendar(timeZone: "Asia/Bangkok")
-    let grid = CalendarMath.monthGrid(for: date(2026, 10, 14, in: cal), calendar: cal, now: date(2026, 10, 14, in: cal))
+    let grid = CalendarMath.monthGrid(
+      for: date(2026, 10, 14, in: cal), calendar: cal, now: date(2026, 10, 14, in: cal))
     XCTAssertEqual(grid.count, 42)
     XCTAssertEqual(grid.first?.date, date(2026, 9, 27, in: cal))
     XCTAssertEqual(grid.last?.date, date(2026, 11, 7, in: cal))
@@ -31,7 +32,9 @@ final class CalendarMathTests: XCTestCase {
   func testGregorianYearIsNotBuddhist() {
     let cal = makeCalendar(timeZone: "Asia/Bangkok")
     let d = date(2026, 10, 14, in: cal)
-    XCTAssertEqual(CalendarMath.monthTitle(for: d, calendar: cal, locale: Locale(identifier: "en_US")), "October 2026")
+    XCTAssertEqual(
+      CalendarMath.monthTitle(for: d, calendar: cal, locale: Locale(identifier: "en_US")),
+      "October 2026")
   }
 
   func testDSTMonthHasConsecutiveDays() {

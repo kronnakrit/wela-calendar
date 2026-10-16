@@ -2,9 +2,10 @@ import Foundation
 
 @testable import WelaCore
 
-func makeCalendar(id: String = "UTC", firstWeekday: Int = 1, identifier: Calendar.Identifier = .gregorian,
-  locale: String = "en_US", timeZone: String) -> Calendar
-{
+func makeCalendar(
+  id: String = "UTC", firstWeekday: Int = 1, identifier: Calendar.Identifier = .gregorian,
+  locale: String = "en_US", timeZone: String
+) -> Calendar {
   var c = Calendar(identifier: identifier)
   c.timeZone = TimeZone(identifier: timeZone)!
   c.locale = Locale(identifier: locale)

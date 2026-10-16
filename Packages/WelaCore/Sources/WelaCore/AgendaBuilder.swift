@@ -58,7 +58,8 @@ public enum AgendaBuilder {
         allDay.append(AgendaItem(event: e, isCancelled: cancelled, multiDayLabel: label))
       } else {
         let end = max(e.end, e.start)
-        let overlaps = e.start < dayEnd && (end > dayStart || (end == e.start && e.start >= dayStart))
+        let overlaps =
+          e.start < dayEnd && (end > dayStart || (end == e.start && e.start >= dayStart))
         guard overlaps else { continue }
         let firstDay = calendar.startOfDay(for: e.start)
         let last = end > e.start ? end.addingTimeInterval(-0.001) : e.start

@@ -10,7 +10,8 @@ final class JoinLinkParserTests: XCTestCase {
   func testStructuredFieldWins() {
     let url = URL(string: "https://example.com/join")!
     let link = JoinLinkParser.parse(
-      structuredURL: url, structuredKind: .teams, location: "https://meet.google.com/abc-defg-hij", notes: nil)
+      structuredURL: url, structuredKind: .teams, location: "https://meet.google.com/abc-defg-hij",
+      notes: nil)
     XCTAssertEqual(link, JoinLink(url: url, kind: .teams))
   }
 
@@ -20,14 +21,19 @@ final class JoinLinkParserTests: XCTestCase {
   }
 
   func testTeamsMeetupJoin() {
-    let l = parse(notes: "Join: https://teams.microsoft.com/l/meetup-join/19%3ameeting_abc%40thread.v2/0?context=%7b%22Tid%22%7d")
+    let l = parse(
+      notes:
+        "Join: https://teams.microsoft.com/l/meetup-join/19%3ameeting_abc%40thread.v2/0?context=%7b%22Tid%22%7d"
+    )
     XCTAssertEqual(l?.kind, .teams)
     XCTAssertTrue(l!.url.absoluteString.hasPrefix("https://teams.microsoft.com/l/meetup-join/"))
   }
 
   func testTeamsLinkWrappedInAngleBrackets() {
-    let l = parse(notes: "Join <https://teams.microsoft.com/l/meetup-join/19%3ameeting_abc/0?x=1> now")
-    XCTAssertEqual(l?.url.absoluteString, "https://teams.microsoft.com/l/meetup-join/19%3ameeting_abc/0?x=1")
+    let l = parse(
+      notes: "Join <https://teams.microsoft.com/l/meetup-join/19%3ameeting_abc/0?x=1> now")
+    XCTAssertEqual(
+      l?.url.absoluteString, "https://teams.microsoft.com/l/meetup-join/19%3ameeting_abc/0?x=1")
   }
 
   func testTeamsLive() {
@@ -59,9 +65,14 @@ final class JoinLinkParserTests: XCTestCase {
   }
 
   func testTrailingPunctuationTrimmed() {
-    XCTAssertEqual(parse(notes: "Link: https://meet.google.com/abc-defg-hij.")?.url.absoluteString, "https://meet.google.com/abc-defg-hij")
-    XCTAssertEqual(parse(notes: "(https://zoom.us/j/12345)")?.url.absoluteString, "https://zoom.us/j/12345")
-    XCTAssertEqual(parse(notes: "see \"https://zoom.us/j/12345\"")?.url.absoluteString, "https://zoom.us/j/12345")
+    XCTAssertEqual(
+      parse(notes: "Link: https://meet.google.com/abc-defg-hij.")?.url.absoluteString,
+      "https://meet.google.com/abc-defg-hij")
+    XCTAssertEqual(
+      parse(notes: "(https://zoom.us/j/12345)")?.url.absoluteString, "https://zoom.us/j/12345")
+    XCTAssertEqual(
+      parse(notes: "see \"https://zoom.us/j/12345\"")?.url.absoluteString, "https://zoom.us/j/12345"
+    )
   }
 
   func testLocationBeatsNotes() {

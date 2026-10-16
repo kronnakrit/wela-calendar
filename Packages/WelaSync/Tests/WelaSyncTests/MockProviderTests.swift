@@ -8,7 +8,8 @@
     func testSeedsRealisticMonth() throws {
       var cal = Calendar(identifier: .gregorian)
       cal.timeZone = TimeZone(identifier: "Asia/Bangkok")!
-      let now = cal.date(from: DateComponents(year: 2026, month: 10, day: 14, hour: 10, minute: 20))!
+      let now = cal.date(
+        from: DateComponents(year: 2026, month: 10, day: 14, hour: 10, minute: 20))!
       let store = try Store()
       try MockProvider.seed(into: store, now: now, calendar: cal)
 

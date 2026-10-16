@@ -40,7 +40,9 @@
       func at(_ offset: Int, _ hour: Int, _ minute: Int = 0) -> Date {
         calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day(offset))!
       }
-      func key(_ offset: Int) -> String { DayKey.string(for: day(offset), timeZone: calendar.timeZone) }
+      func key(_ offset: Int) -> String {
+        DayKey.string(for: day(offset), timeZone: calendar.timeZone)
+      }
 
       let workTitles = [
         "OP Weekly Meeting", "Design review", "1:1 with Mali", "Sprint planning",
@@ -51,8 +53,10 @@
       let sharedTitles = ["Team standup", "All hands", "Demo day"]
       let teams = URL(string: "https://teams.microsoft.com/l/meetup-join/19%3ameeting_mock/0")
 
-      let workId = Self.workId, sharedId = Self.sharedId
-      let personalId = Self.personalId, holidaysId = Self.holidaysId
+      let workId = Self.workId
+      let sharedId = Self.sharedId
+      let personalId = Self.personalId
+      let holidaysId = Self.holidaysId
 
       var out: [EventInstance] = []
       func add(
@@ -93,7 +97,8 @@
         "now", workId, "Weekly sync (in progress)", now.addingTimeInterval(-15 * 60), 45,
         join: true)
       // Cancelled meeting later today.
-      add("cancelled", workId, "Budget review", at(0, 17), 60, location: "Room 4", status: .cancelled)
+      add(
+        "cancelled", workId, "Budget review", at(0, 17), 60, location: "Room 4", status: .cancelled)
       // Invite that has not been answered.
       add(
         "invite", workId, "Design sync", at(1, 10), 60, response: .notResponded, join: true,

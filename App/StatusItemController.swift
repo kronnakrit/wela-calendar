@@ -14,7 +14,9 @@ final class StatusItemController {
     button?.setAccessibilityLabel("Wela Calendar")
     refresh()
     let center = NotificationCenter.default
-    for name in [Notification.Name.NSCalendarDayChanged, .NSSystemTimeZoneDidChange, .NSSystemClockDidChange] {
+    for name in [
+      Notification.Name.NSCalendarDayChanged, .NSSystemTimeZoneDidChange, .NSSystemClockDidChange,
+    ] {
       observers.append(
         center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
           self?.refresh()

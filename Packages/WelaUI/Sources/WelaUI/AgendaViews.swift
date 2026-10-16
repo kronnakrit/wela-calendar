@@ -42,7 +42,8 @@ struct ConferenceIcon: View {
   let kind: ConferenceKind?
 
   var body: some View {
-    Image(systemName: "video.fill").welaFont(11).foregroundStyle(Theme.softInk).accessibilityHidden(true)
+    Image(systemName: "video.fill").welaFont(11).foregroundStyle(Theme.softInk).accessibilityHidden(
+      true)
   }
 }
 
@@ -137,7 +138,9 @@ struct NowCard: View {
           .foregroundStyle(Theme.blueInk)
         Spacer()
         if e.joinURL != nil {
-          Button { vm.join(e) } label: {
+          Button {
+            vm.join(e)
+          } label: {
             Text("Join").welaFont(12, weight: .semibold).foregroundStyle(Theme.onBlue)
               .padding(.horizontal, 16).padding(.vertical, 5)
               .background(Capsule().fill(Theme.blueInk))
@@ -152,7 +155,8 @@ struct NowCard: View {
     .background(
       RoundedRectangle(cornerRadius: 10).fill(Theme.card)
         .overlay(
-          RoundedRectangle(cornerRadius: 10).stroke(isSelected ? Theme.blueInk : Theme.rule, lineWidth: 1))
+          RoundedRectangle(cornerRadius: 10).stroke(
+            isSelected ? Theme.blueInk : Theme.rule, lineWidth: 1))
     )
   }
 }
