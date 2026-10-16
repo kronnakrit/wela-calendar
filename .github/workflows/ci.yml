@@ -48,5 +48,17 @@ jobs:
     continue-on-error: true # advisory until the formatting baseline is clean
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
       - run: brew install swift-format
+      - name: Auto-format (branch pushes only)
+        if: github.event_name == 'push' && startsWith(github.ref_name, 'claude/')
+        run: |
+          swift-format format --in-place --recursive App AppTests Packages/*/Sources Packages/*/Tests
+          if ! git diff --quiet; then
+            git config user.name "github-actions"
+            git config user.email "actions@github.com"
+            git commit -qam "Apply swift-format"
+            git push -q origin HEAD:${{ github.ref_name }}
+          fi
       - run: make lint
