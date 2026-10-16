@@ -1,0 +1,7 @@
+*.xcodeproj
+Config/Secrets.xcconfig
+DerivedData/
+.build/
+.swiftpm/
+xcuserdata/
+.DS_Store

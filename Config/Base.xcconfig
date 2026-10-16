@@ -1,0 +1,9 @@
+// Defaults; Secrets.xcconfig (gitignored) overrides them.
+WELA_BUNDLE_ID = com.example.wela
+MS_CLIENT_ID =
+GOOGLE_CLIENT_ID =
+GOOGLE_REDIRECT_SCHEME = com.example.wela.google
+MACOSX_DEPLOYMENT_TARGET = 14.0
+SWIFT_VERSION = 5.0
+
+#include? "Secrets.xcconfig"
