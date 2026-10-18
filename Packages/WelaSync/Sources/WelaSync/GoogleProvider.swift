@@ -37,7 +37,8 @@ public struct GoogleProvider: CalendarProvider {
     if let token = state?.syncToken, let state {
       do {
         let pages = try await fetchPages(
-          calendar: calendar, account: account, query: [URLQueryItem(name: "syncToken", value: token)])
+          calendar: calendar, account: account,
+          query: [URLQueryItem(name: "syncToken", value: token)])
         var next = state
         next.syncToken = pages.syncToken ?? token
         next.lastSyncedAt = now
@@ -74,7 +75,8 @@ public struct GoogleProvider: CalendarProvider {
     var pages = try await fetchPages(
       calendar: calendar, account: account, query: query(bounded: preferBoundedInitialSync))
     if pages.syncToken == nil && preferBoundedInitialSync {
-      pages = try await fetchPages(calendar: calendar, account: account, query: query(bounded: false))
+      pages = try await fetchPages(
+        calendar: calendar, account: account, query: query(bounded: false))
     }
     let events = pages.events.compactMap { e -> EventInstance? in
       guard e.status != "cancelled", let m = Self.map(e, calendar: calendar) else { return nil }
@@ -211,12 +213,14 @@ public struct GoogleProvider: CalendarProvider {
 
     return EventInstance(
       calendarId: calendar.id, providerEventId: g.id, seriesId: g.recurringEventId,
-      title: (g.summary?.isEmpty == false ? g.summary : nil) ?? "(No title)", start: start, end: end,
+      title: (g.summary?.isEmpty == false ? g.summary : nil) ?? "(No title)", start: start,
+      end: end,
       isAllDay: allDay, startDay: startDay, endDay: endDay, location: g.location,
       notes: g.description, organizerEmail: g.organizer?.email, attendees: attendees,
       myResponse: response, status: g.status == "tentative" ? .tentative : .confirmed,
       joinURL: join?.url, conferenceKind: join?.kind, isBirthday: g.eventType == "birthday",
-      etag: g.etag, updatedAt: g.updated.flatMap(DateParsing.parse) ?? Date(timeIntervalSince1970: 0))
+      etag: g.etag,
+      updatedAt: g.updated.flatMap(DateParsing.parse) ?? Date(timeIntervalSince1970: 0))
   }
 
   private static func response(_ raw: String?) -> ResponseStatus {

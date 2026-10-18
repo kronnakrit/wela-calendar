@@ -5,7 +5,8 @@ import XCTest
 
 final class MicrosoftProviderTests: XCTestCase {
   let account = Account(id: "ms", provider: .microsoft, email: "me@contoso.com", displayName: "Me")
-  let cal = CalendarInfo(accountId: "ms", providerCalendarId: "CAL1", name: "Calendar", providerColorHex: "#3D5A96")
+  let cal = CalendarInfo(
+    accountId: "ms", providerCalendarId: "CAL1", name: "Calendar", providerColorHex: "#3D5A96")
 
   static let page1 = """
     {"@odata.nextLink": "https://graph.microsoft.com/v1.0/next-page",
@@ -41,7 +42,9 @@ final class MicrosoftProviderTests: XCTestCase {
      ]}
     """
 
-  private func provider(_ handler: @escaping @Sendable (URLRequest) throws -> Reply, sleeps: SleepLog = SleepLog())
+  private func provider(
+    _ handler: @escaping @Sendable (URLRequest) throws -> Reply, sleeps: SleepLog = SleepLog()
+  )
     -> (MicrosoftProvider, FakeTransport)
   {
     let t = FakeTransport(handler)
@@ -50,7 +53,8 @@ final class MicrosoftProviderTests: XCTestCase {
 
   func testInitialSyncMapsEventsAndFollowsPages() async throws {
     let (p, t) = provider { req in
-      req.url!.absoluteString.hasSuffix("next-page") ? Reply(body: Self.page2) : Reply(body: Self.page1)
+      req.url!.absoluteString.hasSuffix("next-page")
+        ? Reply(body: Self.page2) : Reply(body: Self.page1)
     }
     let r = try await p.sync(account: account, calendar: cal, state: nil, now: testNow)
     XCTAssertTrue(r.replacesAll)
@@ -61,8 +65,10 @@ final class MicrosoftProviderTests: XCTestCase {
     XCTAssertTrue(first.url!.path.hasSuffix("/me/calendars/CAL1/calendarView/delta"))
     XCTAssertEqual(query(first, "startDateTime"), "2026-07-16T03:00:00Z")
     XCTAssertEqual(query(first, "endDateTime"), "2027-10-14T03:00:00Z")
-    XCTAssertEqual(first.value(forHTTPHeaderField: "Prefer"), "outlook.timezone=\"UTC\", odata.maxpagesize=100")
-    XCTAssertEqual(t.requests[1].value(forHTTPHeaderField: "Prefer"), first.value(forHTTPHeaderField: "Prefer"))
+    XCTAssertEqual(
+      first.value(forHTTPHeaderField: "Prefer"), "outlook.timezone=\"UTC\", odata.maxpagesize=100")
+    XCTAssertEqual(
+      t.requests[1].value(forHTTPHeaderField: "Prefer"), first.value(forHTTPHeaderField: "Prefer"))
     XCTAssertEqual(first.value(forHTTPHeaderField: "Authorization"), "Bearer tok")
 
     let teams = try XCTUnwrap(r.upserts.first { $0.providerEventId == "teams1" })
@@ -101,7 +107,8 @@ final class MicrosoftProviderTests: XCTestCase {
     let (p, t) = provider { _ in Reply(body: body) }
     let state = SyncState(
       calendarId: cal.id, deltaLink: "https://graph.microsoft.com/v1.0/delta?token=OLD",
-      windowStart: testNow.addingTimeInterval(-90 * 86_400), windowEnd: testNow.addingTimeInterval(365 * 86_400))
+      windowStart: testNow.addingTimeInterval(-90 * 86_400),
+      windowEnd: testNow.addingTimeInterval(365 * 86_400))
     let r = try await p.sync(account: account, calendar: cal, state: state, now: testNow)
     XCTAssertFalse(r.replacesAll)
     XCTAssertEqual(r.deletedIds, ["ms:CAL1:gone1"])
@@ -109,14 +116,19 @@ final class MicrosoftProviderTests: XCTestCase {
     XCTAssertEqual(r.newState.deltaLink, "https://graph.microsoft.com/v1.0/delta?token=NEW")
     XCTAssertEqual(r.newState.windowEnd, state.windowEnd)
     XCTAssertEqual(t.requests[0].url?.absoluteString, state.deltaLink)
-    XCTAssertEqual(t.requests[0].value(forHTTPHeaderField: "Prefer"), "outlook.timezone=\"UTC\", odata.maxpagesize=100")
+    XCTAssertEqual(
+      t.requests[0].value(forHTTPHeaderField: "Prefer"),
+      "outlook.timezone=\"UTC\", odata.maxpagesize=100")
   }
 
   func testWindowRollTriggersFreshInitialSync() async throws {
-    let (p, t) = provider { _ in Reply(body: "{\"@odata.deltaLink\": \"https://x/delta?t=2\", \"value\": []}") }
+    let (p, t) = provider { _ in
+      Reply(body: "{\"@odata.deltaLink\": \"https://x/delta?t=2\", \"value\": []}")
+    }
     let state = SyncState(
       calendarId: cal.id, deltaLink: "https://graph.microsoft.com/v1.0/delta?token=OLD",
-      windowStart: testNow.addingTimeInterval(-90 * 86_400), windowEnd: testNow.addingTimeInterval(300 * 86_400))
+      windowStart: testNow.addingTimeInterval(-90 * 86_400),
+      windowEnd: testNow.addingTimeInterval(300 * 86_400))
     let r = try await p.sync(account: account, calendar: cal, state: state, now: testNow)
     XCTAssertTrue(r.replacesAll)
     XCTAssertTrue(t.requests[0].url!.path.hasSuffix("/calendarView/delta"))
@@ -126,7 +138,8 @@ final class MicrosoftProviderTests: XCTestCase {
   func testExpiredDeltaFallsBackToInitialSync() async throws {
     let (p, t) = provider { req in
       req.url!.absoluteString.contains("token=OLD")
-        ? Reply(status: 410, body: "{}") : Reply(body: "{\"@odata.deltaLink\": \"https://x/delta?t=2\", \"value\": []}")
+        ? Reply(status: 410, body: "{}")
+        : Reply(body: "{\"@odata.deltaLink\": \"https://x/delta?t=2\", \"value\": []}")
     }
     let state = SyncState(
       calendarId: cal.id, deltaLink: "https://graph.microsoft.com/v1.0/delta?token=OLD",
@@ -162,10 +175,11 @@ final class MicrosoftProviderTests: XCTestCase {
 
   func testListCalendarsFallsBackToInkColours() async throws {
     let (p, _) = provider { _ in
-      Reply(body: """
-        {"value": [{"id": "a", "name": "One", "hexColor": "", "canEdit": true},
-                   {"id": "b", "name": "Two", "hexColor": "#112233", "canEdit": false}]}
-        """)
+      Reply(
+        body: """
+          {"value": [{"id": "a", "name": "One", "hexColor": "", "canEdit": true},
+                     {"id": "b", "name": "Two", "hexColor": "#112233", "canEdit": false}]}
+          """)
     }
     let cals = try await p.listCalendars(account: account)
     XCTAssertEqual(cals.map(\.providerColorHex), ["#3D5A96", "#112233"])
@@ -174,12 +188,15 @@ final class MicrosoftProviderTests: XCTestCase {
 
   func testRespondPostsToTheRightAction() async throws {
     let (p, t) = provider { _ in Reply(status: 202, body: "") }
-    let event = EventInstance(calendarId: cal.id, providerEventId: "teams1", title: "x", start: testNow, end: testNow)
+    let event = EventInstance(
+      calendarId: cal.id, providerEventId: "teams1", title: "x", start: testNow, end: testNow)
     try await p.respond(account: account, calendar: cal, event: event, response: .tentative)
     let req = t.requests[0]
     XCTAssertEqual(req.httpMethod, "POST")
     XCTAssertTrue(req.url!.path.hasSuffix("/me/events/teams1/tentativelyAccept"))
-    XCTAssertEqual(String(data: req.httpBody ?? Data(), encoding: .utf8)?.contains("\"sendResponse\":true"), true)
+    XCTAssertEqual(
+      String(data: req.httpBody ?? Data(), encoding: .utf8)?.contains("\"sendResponse\":true"), true
+    )
   }
 }
 

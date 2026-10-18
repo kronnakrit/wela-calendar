@@ -48,7 +48,9 @@ public actor SyncEngine {
     do {
       let fetched = try await provider.listCalendars(account: account)
       let existing = Dictionary(
-        uniqueKeysWithValues: ((try? store.calendars(accountId: account.id)) ?? []).map { ($0.id, $0) })
+        uniqueKeysWithValues: ((try? store.calendars(accountId: account.id)) ?? []).map {
+          ($0.id, $0)
+        })
       let merged = fetched.map { cal -> CalendarInfo in
         var c = cal
         if let old = existing[cal.id] {
@@ -61,7 +63,9 @@ public actor SyncEngine {
       for gone in existing.keys where !merged.contains(where: { $0.id == gone }) {
         try store.deleteCalendar(id: gone)
       }
-      for cal in merged { try await syncCalendar(account: account, calendar: cal, provider: provider) }
+      for cal in merged {
+        try await syncCalendar(account: account, calendar: cal, provider: provider)
+      }
       setStatus(account.id, .ok)
     } catch SyncError.needsSignIn {
       setStatus(account.id, .needsSignIn)
@@ -79,7 +83,8 @@ public actor SyncEngine {
     guard inFlight.insert(calendar.id).inserted else { return }
     defer { inFlight.remove(calendar.id) }
     let state = try store.syncState(calendarId: calendar.id)
-    let result = try await provider.sync(account: account, calendar: calendar, state: state, now: now())
+    let result = try await provider.sync(
+      account: account, calendar: calendar, state: state, now: now())
     if result.replacesAll {
       try store.replaceEvents(calendarId: calendar.id, with: result.upserts)
     } else {
@@ -107,9 +112,12 @@ public actor SyncEngine {
     var optimistic = event
     optimistic.myResponse = response
     try store.upsertEvents([optimistic])
-    let payload = try JSONEncoder().encode(RSVPPayload(response: response, previous: event.myResponse))
+    let payload = try JSONEncoder().encode(
+      RSVPPayload(response: response, previous: event.myResponse))
     try store.enqueue(
-      OutboxItem(accountId: calendar.accountId, eventId: event.id, action: "rsvp", payload: payload, createdAt: now()))
+      OutboxItem(
+        accountId: calendar.accountId, eventId: event.id, action: "rsvp", payload: payload,
+        createdAt: now()))
     let failures = await flushOutbox()
     if let failure = failures.first(where: { $0.eventId == event.id }) {
       throw RSVPError.failed(failure.message)
@@ -124,7 +132,9 @@ public actor SyncEngine {
     defer { flushing = false }
     var failures: [RSVPFailure] = []
     var stuck: Set<Int64> = []
-    while let item = ((try? store.pendingOutbox()) ?? []).first(where: { !stuck.contains($0.id ?? -1) }) {
+    while let item = ((try? store.pendingOutbox()) ?? []).first(where: {
+      !stuck.contains($0.id ?? -1)
+    }) {
       guard let id = item.id else { break }
       switch await send(item) {
       case .sent:
@@ -150,7 +160,8 @@ public actor SyncEngine {
   }
 
   private func send(_ item: OutboxItem) async -> SendOutcome {
-    guard item.action == "rsvp", let payload = try? JSONDecoder().decode(RSVPPayload.self, from: item.payload)
+    guard item.action == "rsvp",
+      let payload = try? JSONDecoder().decode(RSVPPayload.self, from: item.payload)
     else { return .failed("unsupported queued action", previous: nil) }
     guard let event = try? store.event(id: item.eventId),
       let calendar = try? store.calendar(id: event.calendarId),
@@ -158,7 +169,8 @@ public actor SyncEngine {
       let provider = providers[account.provider]
     else { return .failed("event no longer available", previous: nil) }
     do {
-      try await provider.respond(account: account, calendar: calendar, event: event, response: payload.response)
+      try await provider.respond(
+        account: account, calendar: calendar, event: event, response: payload.response)
       return .sent
     } catch SyncError.offline {
       return .retryLater

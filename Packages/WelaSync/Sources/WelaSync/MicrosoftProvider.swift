@@ -74,7 +74,8 @@ public struct MicrosoftProvider: CalendarProvider {
     let end = now.addingTimeInterval(Double(futureDays) * 86_400)
     var comps = URLComponents(
       url: Self.baseURL.appendingPathComponent(
-        "me/calendars/\(percentEncodePathComponent(calendar.providerCalendarId))/calendarView/delta"),
+        "me/calendars/\(percentEncodePathComponent(calendar.providerCalendarId))/calendarView/delta"
+      ),
       resolvingAgainstBaseURL: false)!
     comps.queryItems = [
       URLQueryItem(name: "startDateTime", value: DateParsing.utcString(start)),
@@ -181,12 +182,14 @@ public struct MicrosoftProvider: CalendarProvider {
 
     return EventInstance(
       calendarId: calendar.id, providerEventId: g.id, seriesId: g.seriesMasterId,
-      title: (g.subject?.isEmpty == false ? g.subject : nil) ?? "(No title)", start: start, end: end,
+      title: (g.subject?.isEmpty == false ? g.subject : nil) ?? "(No title)", start: start,
+      end: end,
       isAllDay: allDay, startDay: startDay, endDay: endDay, location: location, notes: notes,
       organizerEmail: g.organizer?.emailAddress?.address, attendees: attendees,
       myResponse: response, status: (g.isCancelled ?? false) ? .cancelled : .confirmed,
       joinURL: join?.url, conferenceKind: join?.kind, etag: g.changeKey,
-      updatedAt: g.lastModifiedDateTime.flatMap(DateParsing.parse) ?? Date(timeIntervalSince1970: 0))
+      updatedAt: g.lastModifiedDateTime.flatMap(DateParsing.parse) ?? Date(timeIntervalSince1970: 0)
+    )
   }
 
   private static func attendeeResponse(_ raw: String?) -> ResponseStatus {

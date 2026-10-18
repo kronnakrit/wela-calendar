@@ -33,7 +33,9 @@ final class FakeProvider: CalendarProvider, @unchecked Sendable {
 
   func listCalendars(account: Account) async throws -> [CalendarInfo] { calendars }
 
-  func sync(account: Account, calendar: CalendarInfo, state: SyncState?, now: Date) async throws -> SyncResult {
+  func sync(account: Account, calendar: CalendarInfo, state: SyncState?, now: Date) async throws
+    -> SyncResult
+  {
     lock.withLock {
       _syncCalls += 1
       _active += 1
@@ -44,11 +46,14 @@ final class FakeProvider: CalendarProvider, @unchecked Sendable {
     if let syncError { throw syncError }
     return SyncResult(
       upserts: events.filter { $0.calendarId == calendar.id },
-      deletedIds: [], newState: SyncState(calendarId: calendar.id, deltaLink: "d", lastSyncedAt: now),
+      deletedIds: [],
+      newState: SyncState(calendarId: calendar.id, deltaLink: "d", lastSyncedAt: now),
       replacesAll: true)
   }
 
-  func respond(account: Account, calendar: CalendarInfo, event: EventInstance, response: ResponseStatus) async throws {
+  func respond(
+    account: Account, calendar: CalendarInfo, event: EventInstance, response: ResponseStatus
+  ) async throws {
     switch respondMode {
     case .ok: lock.withLock { _responded.append(response) }
     case .offline: throw SyncError.offline
@@ -59,7 +64,8 @@ final class FakeProvider: CalendarProvider, @unchecked Sendable {
 
 final class SyncEngineTests: XCTestCase {
   let account = Account(id: "a", provider: .mock, email: "x@y.z", displayName: "X")
-  let cal = CalendarInfo(accountId: "a", providerCalendarId: "c", name: "Work", providerColorHex: "#3D5A96")
+  let cal = CalendarInfo(
+    accountId: "a", providerCalendarId: "c", name: "Work", providerColorHex: "#3D5A96")
   var store: Store!
   var provider: FakeProvider!
   var engine: SyncEngine!

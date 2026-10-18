@@ -28,7 +28,8 @@ final class FakeTransport: HTTPTransport, @unchecked Sendable {
     lock.unlock()
     let reply = try handler(request)
     let response = HTTPURLResponse(
-      url: request.url!, statusCode: reply.status, httpVersion: "HTTP/1.1", headerFields: reply.headers)!
+      url: request.url!, statusCode: reply.status, httpVersion: "HTTP/1.1",
+      headerFields: reply.headers)!
     return (Data(reply.body.utf8), response)
   }
 }

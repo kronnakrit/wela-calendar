@@ -9,7 +9,9 @@ public struct SyncResult: Sendable {
   /// and replaces the cache in a single transaction.
   public var replacesAll: Bool
 
-  public init(upserts: [EventInstance], deletedIds: [String], newState: SyncState, replacesAll: Bool) {
+  public init(
+    upserts: [EventInstance], deletedIds: [String], newState: SyncState, replacesAll: Bool
+  ) {
     self.upserts = upserts
     self.deletedIds = deletedIds
     self.newState = newState

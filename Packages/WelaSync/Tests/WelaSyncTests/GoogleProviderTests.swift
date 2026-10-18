@@ -5,7 +5,8 @@ import XCTest
 
 final class GoogleProviderTests: XCTestCase {
   let account = Account(id: "g", provider: .google, email: "me@gmail.com", displayName: "Me")
-  let cal = CalendarInfo(accountId: "g", providerCalendarId: "me@gmail.com", name: "Me", providerColorHex: "#9fc6e7")
+  let cal = CalendarInfo(
+    accountId: "g", providerCalendarId: "me@gmail.com", name: "Me", providerColorHex: "#9fc6e7")
 
   static let items = """
     {"nextSyncToken": "SYNC1", "items": [
@@ -69,9 +70,14 @@ final class GoogleProviderTests: XCTestCase {
 
   func testIncrementalUsesSyncTokenOnlyAndDeletesCancelled() async throws {
     let (p, t) = provider { _ in
-      Reply(body: "{\"nextSyncToken\": \"SYNC2\", \"items\": [{\"id\": \"cancel1\", \"status\": \"cancelled\"}]}")
+      Reply(
+        body:
+          "{\"nextSyncToken\": \"SYNC2\", \"items\": [{\"id\": \"cancel1\", \"status\": \"cancelled\"}]}"
+      )
     }
-    let state = SyncState(calendarId: cal.id, syncToken: "SYNC1", windowStart: testNow, windowEnd: testNow.addingTimeInterval(365 * 86_400))
+    let state = SyncState(
+      calendarId: cal.id, syncToken: "SYNC1", windowStart: testNow,
+      windowEnd: testNow.addingTimeInterval(365 * 86_400))
     let r = try await p.sync(account: account, calendar: cal, state: state, now: testNow)
     XCTAssertFalse(r.replacesAll)
     XCTAssertEqual(r.deletedIds, ["g:me@gmail.com:cancel1"])
@@ -108,8 +114,14 @@ final class GoogleProviderTests: XCTestCase {
   func testPaginationFollowsNextPageToken() async throws {
     let (p, t) = provider { req in
       query(req, "pageToken") == "P2"
-        ? Reply(body: "{\"nextSyncToken\": \"S\", \"items\": [{\"id\": \"b\", \"summary\": \"B\", \"start\": {\"date\": \"2026-10-20\"}, \"end\": {\"date\": \"2026-10-21\"}}]}")
-        : Reply(body: "{\"nextPageToken\": \"P2\", \"items\": [{\"id\": \"a\", \"summary\": \"A\", \"start\": {\"date\": \"2026-10-19\"}, \"end\": {\"date\": \"2026-10-20\"}}]}")
+        ? Reply(
+          body:
+            "{\"nextSyncToken\": \"S\", \"items\": [{\"id\": \"b\", \"summary\": \"B\", \"start\": {\"date\": \"2026-10-20\"}, \"end\": {\"date\": \"2026-10-21\"}}]}"
+        )
+        : Reply(
+          body:
+            "{\"nextPageToken\": \"P2\", \"items\": [{\"id\": \"a\", \"summary\": \"A\", \"start\": {\"date\": \"2026-10-19\"}, \"end\": {\"date\": \"2026-10-20\"}}]}"
+        )
     }
     let r = try await p.sync(account: account, calendar: cal, state: nil, now: testNow)
     XCTAssertEqual(r.upserts.map(\.providerEventId), ["a", "b"])
@@ -123,12 +135,14 @@ final class GoogleProviderTests: XCTestCase {
       if req.httpMethod == "PATCH" {
         return patches.next() == 1 ? Reply(status: 412) : Reply(body: "{}")
       }
-      return Reply(body: """
-        {"etag": "\\"fresh\\"", "attendees": [{"email": "boss@example.com", "responseStatus": "declined"},
-                                          {"email": "me@gmail.com", "self": true, "responseStatus": "needsAction"}]}
-        """)
+      return Reply(
+        body: """
+          {"etag": "\\"fresh\\"", "attendees": [{"email": "boss@example.com", "responseStatus": "declined"},
+                                            {"email": "me@gmail.com", "self": true, "responseStatus": "needsAction"}]}
+          """)
     }
-    let event = EventInstance(calendarId: cal.id, providerEventId: "invite1", title: "x", start: testNow, end: testNow)
+    let event = EventInstance(
+      calendarId: cal.id, providerEventId: "invite1", title: "x", start: testNow, end: testNow)
     try await p.respond(account: account, calendar: cal, event: event, response: .accepted)
     let patchRequests = t.requests.filter { $0.httpMethod == "PATCH" }
     XCTAssertEqual(patchRequests.count, 2)
