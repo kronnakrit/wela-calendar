@@ -128,6 +128,31 @@ public final class Store: @unchecked Sendable {
     try dbQueue.read { db in try CalendarInfo.order(Column("name")).fetchAll(db) }
   }
 
+  public func account(id: String) throws -> Account? {
+    try dbQueue.read { db in try Account.fetchOne(db, key: id) }
+  }
+
+  public func calendar(id: String) throws -> CalendarInfo? {
+    try dbQueue.read { db in try CalendarInfo.fetchOne(db, key: id) }
+  }
+
+  public func calendars(accountId: String) throws -> [CalendarInfo] {
+    try dbQueue.read { db in
+      try CalendarInfo.filter(Column("accountId") == accountId).order(Column("name")).fetchAll(db)
+    }
+  }
+
+  public func deleteCalendar(id: String) throws {
+    try dbQueue.write { db in
+      try db.execute(
+        sql: """
+          DELETE FROM event_fts WHERE eventId IN (
+            SELECT id FROM event_instance WHERE calendarId = ?)
+          """, arguments: [id])
+      _ = try CalendarInfo.deleteOne(db, key: id)
+    }
+  }
+
   public func setCalendarVisibility(id: String, isVisible: Bool) throws {
     try dbQueue.write { db in
       try db.execute(
