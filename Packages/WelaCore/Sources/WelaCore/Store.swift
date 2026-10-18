@@ -244,6 +244,29 @@ public final class Store: @unchecked Sendable {
     }
   }
 
+  public func observeAccounts() -> AsyncStream<[Account]> {
+    let queue = dbQueue
+    let observation = ValueObservation.tracking { db in
+      try Account.order(Column("email")).fetchAll(db)
+    }
+    return AsyncStream { continuation in
+      let task = Task {
+        do {
+          for try await value in observation.values(in: queue) { continuation.yield(value) }
+        } catch {}
+        continuation.finish()
+      }
+      continuation.onTermination = { _ in task.cancel() }
+    }
+  }
+
+  /// The most recent successful sync across all calendars.
+  public func lastSyncedAt() throws -> Date? {
+    try dbQueue.read { db in
+      try Date.fetchOne(db, sql: "SELECT MAX(lastSyncedAt) FROM sync_state")
+    }
+  }
+
   // MARK: Search
 
   /// Full-text search over title, location, notes and attendees, grouped by day.

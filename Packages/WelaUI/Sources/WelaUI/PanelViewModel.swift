@@ -7,6 +7,7 @@ import WelaCore
 public final class PanelViewModel: ObservableObject {
   public let store: Store
   public weak var actions: EventActions?
+  public weak var accountActions: AccountActions?
   public var calendar: Calendar { didSet { restartObservation() } }
   public var locale: Locale
   public var options = AgendaOptions() { didSet { objectWillChange.send() } }
@@ -24,9 +25,14 @@ public final class PanelViewModel: ObservableObject {
   @Published public var selectedEventID: String?
   @Published public var detailEventID: String?
   @Published public var isPinned = false
+  @Published public private(set) var accounts: [Account] = []
+  @Published public private(set) var lastSyncedAt: Date?
+  @Published public var isOffline = false
+  @Published public private(set) var rsvpError: String?
 
   private var eventsTask: Task<Void, Never>?
   private var calendarsTask: Task<Void, Never>?
+  private var accountsTask: Task<Void, Never>?
   private var lastClosedAt: Date?
   private let rememberMonthFor: TimeInterval = 5 * 60
 
@@ -43,11 +49,13 @@ public final class PanelViewModel: ObservableObject {
     self.selectedDay = calendar.startOfDay(for: now)
     restartObservation()
     observeCalendars()
+    observeAccounts()
   }
 
   deinit {
     eventsTask?.cancel()
     calendarsTask?.cancel()
+    accountsTask?.cancel()
   }
 
   // MARK: Observation
@@ -62,6 +70,7 @@ public final class PanelViewModel: ObservableObject {
       for await events in stream {
         guard let self else { return }
         self.events = events
+        self.lastSyncedAt = try? self.store.lastSyncedAt()
       }
     }
   }
@@ -72,6 +81,17 @@ public final class PanelViewModel: ObservableObject {
       for await calendars in stream {
         guard let self else { return }
         self.calendars = calendars
+      }
+    }
+  }
+
+  private func observeAccounts() {
+    let stream = store.observeAccounts()
+    accountsTask = Task { [weak self] in
+      for await accounts in stream {
+        guard let self else { return }
+        self.accounts = accounts
+        self.lastSyncedAt = try? self.store.lastSyncedAt()
       }
     }
   }
@@ -252,6 +272,40 @@ public final class PanelViewModel: ObservableObject {
   }
 
   public func closeDetail() { detailEventID = nil }
+
+  func canRespond(to event: EventInstance) -> Bool {
+    !event.attendees.isEmpty && event.myResponse != .organizer
+  }
+
+  /// Accept / Tentative / Decline. The row updates immediately; a failure rolls it back and
+  /// shows a message for five seconds.
+  public func respond(to event: EventInstance, with response: ResponseStatus) {
+    Task { [weak self] in
+      do {
+        try await self?.actions?.respond(to: event, with: response)
+      } catch {
+        self?.rsvpError = "Couldn't send your response"
+        try? await Task.sleep(nanoseconds: 5_000_000_000)
+        self?.rsvpError = nil
+      }
+    }
+  }
+
+  var accountNeedingSignIn: Account? { accounts.first { $0.status == .needsSignIn } }
+
+  public func reconnect(_ account: Account) {
+    Task { [weak self] in try? await self?.accountActions?.reconnect(account) }
+  }
+
+  /// "Last synced 14:05" when offline or an account is erroring; nil otherwise.
+  var staleSyncText: String? {
+    let erroring = accounts.contains {
+      if case .error = $0.status { return true }
+      return false
+    }
+    guard isOffline || erroring, let last = lastSyncedAt else { return nil }
+    return "Last synced \(formatted(last, "jm"))"
+  }
 
   public func setCalendarVisible(_ id: String, _ visible: Bool) {
     try? store.setCalendarVisibility(id: id, isVisible: visible)

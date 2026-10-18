@@ -44,6 +44,10 @@ public struct PanelView: View {
     VStack(spacing: 0) {
       SearchField(text: $vm.searchText, focus: $focus)
         .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 8)
+      if let account = vm.accountNeedingSignIn {
+        ReconnectBanner(account: account) { vm.reconnect(account) }
+          .padding(.horizontal, 16).padding(.bottom, 6)
+      }
       if vm.isSearching {
         SearchResultsList(vm: vm).padding(.horizontal, 10)
       } else {
@@ -54,6 +58,9 @@ public struct PanelView: View {
         AgendaList(vm: vm).padding(.horizontal, 10)
       }
       Spacer(minLength: 0)
+      if let text = vm.staleSyncText {
+        Text(text).welaFont(11).foregroundStyle(Theme.softInk).padding(.bottom, 2)
+      }
       FooterView(vm: vm).padding(.horizontal, 16).padding(.vertical, 10)
     }
   }
@@ -186,6 +193,24 @@ struct FooterView: View {
   }
 }
 
+struct ReconnectBanner: View {
+  let account: Account
+  let action: () -> Void
+
+  var body: some View {
+    HStack {
+      Text("\(account.email) needs you to sign in").welaFont(12).foregroundStyle(Theme.ink)
+        .lineLimit(1)
+      Spacer()
+      Button("Reconnect", action: action).buttonStyle(.plain).welaFont(12, weight: .semibold)
+        .foregroundStyle(Theme.blueInk)
+    }
+    .padding(.horizontal, 10).padding(.vertical, 6)
+    .background(RoundedRectangle(cornerRadius: 8).fill(Theme.highlighter))
+    .accessibilityElement(children: .combine)
+  }
+}
+
 /// Minimal detail pane; the full card (RSVP, attendees, notes links) arrives in M5.
 struct EventDetailView: View {
   @ObservedObject var vm: PanelViewModel
@@ -218,6 +243,26 @@ struct EventDetailView: View {
               Capsule().fill(Theme.blueInk))
         }
         .buttonStyle(.plain)
+      }
+      if vm.canRespond(to: event) {
+        HStack(spacing: 8) {
+          ForEach(
+            [("Accept", ResponseStatus.accepted), ("Tentative", .tentative), ("Decline", .declined)],
+            id: \.0
+          ) { label, response in
+            Button { vm.respond(to: event, with: response) } label: {
+              Text(label).welaFont(12, weight: event.myResponse == response ? .bold : .regular)
+                .foregroundStyle(Theme.ink).padding(.horizontal, 12).padding(.vertical, 5)
+                .background(
+                  Capsule().fill(event.myResponse == response ? Theme.highlighter : Theme.field))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(label) invitation")
+          }
+        }
+        if let message = vm.rsvpError {
+          Text(message).welaFont(11.5).foregroundStyle(Theme.redPen)
+        }
       }
       if !event.attendees.isEmpty {
         VStack(alignment: .leading, spacing: 4) {

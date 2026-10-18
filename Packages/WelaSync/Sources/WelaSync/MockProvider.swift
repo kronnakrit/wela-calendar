@@ -121,3 +121,26 @@
     }
   }
 #endif
+
+#if DEBUG
+  /// Provider used with `-UseMockData`: RSVPs succeed after a short delay; nothing syncs.
+  public struct MockCalendarProvider: CalendarProvider {
+    public init() {}
+
+    public func listCalendars(account: Account) async throws -> [CalendarInfo] {
+      throw SyncError.offline
+    }
+
+    public func sync(account: Account, calendar: CalendarInfo, state: SyncState?, now: Date)
+      async throws -> SyncResult
+    {
+      throw SyncError.offline
+    }
+
+    public func respond(
+      account: Account, calendar: CalendarInfo, event: EventInstance, response: ResponseStatus
+    ) async throws {
+      try await Task.sleep(nanoseconds: 300_000_000)
+    }
+  }
+#endif
