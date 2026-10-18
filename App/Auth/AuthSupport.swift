@@ -10,7 +10,8 @@ enum AuthError: LocalizedError {
 
   var errorDescription: String? {
     switch self {
-    case .notConfigured(let what): return "\(what) is not configured. Add it to Config/Secrets.xcconfig."
+    case .notConfigured(let what):
+      return "\(what) is not configured. Add it to Config/Secrets.xcconfig."
     case .cancelled: return "Sign-in was cancelled."
     case .failed(let message): return message
     }

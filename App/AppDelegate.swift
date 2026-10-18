@@ -45,10 +45,14 @@ final class AppActions: EventActions, AccountActions {
     let account: Account
     switch provider {
     case .microsoft:
-      guard let microsoft else { throw AuthError.notConfigured("The Microsoft client ID (MS_CLIENT_ID)") }
+      guard let microsoft else {
+        throw AuthError.notConfigured("The Microsoft client ID (MS_CLIENT_ID)")
+      }
       account = try await microsoft.signIn()
     case .google:
-      guard let google else { throw AuthError.notConfigured("The Google client ID (GOOGLE_CLIENT_ID)") }
+      guard let google else {
+        throw AuthError.notConfigured("The Google client ID (GOOGLE_CLIENT_ID)")
+      }
       account = try await google.signIn()
     case .mock:
       return

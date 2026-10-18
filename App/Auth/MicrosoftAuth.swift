@@ -38,8 +38,10 @@ final class MicrosoftAuth: AccessTokenProvider, @unchecked Sendable {
     }
     let name = result.account.accountClaims?["name"] as? String
     return Account(
-      id: Self.idPrefix + (result.account.identifier ?? result.account.username ?? UUID().uuidString),
-      provider: .microsoft, email: result.account.username ?? "", displayName: name ?? result.account.username ?? "")
+      id: Self.idPrefix
+        + (result.account.identifier ?? result.account.username ?? UUID().uuidString),
+      provider: .microsoft, email: result.account.username ?? "",
+      displayName: name ?? result.account.username ?? "")
   }
 
   func accessToken(for account: Account) async throws -> String {

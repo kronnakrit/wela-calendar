@@ -64,7 +64,8 @@ final class GoogleAuth: AccessTokenProvider, @unchecked Sendable {
     let subject = claims?.subject ?? email
     let account = Account(
       id: Self.idPrefix + subject, provider: .google, email: email,
-      displayName: (state.lastTokenResponse?.idToken.flatMap(Self.claims)?["name"] as? String) ?? email)
+      displayName: (state.lastTokenResponse?.idToken.flatMap(Self.claims)?["name"] as? String)
+        ?? email)
     store(state, for: account.id)
     return account
   }
@@ -98,7 +99,9 @@ final class GoogleAuth: AccessTokenProvider, @unchecked Sendable {
     lock.lock()
     states[id] = state
     lock.unlock()
-    if let data = try? NSKeyedArchiver.archivedData(withRootObject: state, requiringSecureCoding: true) {
+    if let data = try? NSKeyedArchiver.archivedData(
+      withRootObject: state, requiringSecureCoding: true)
+    {
       Keychain.save(data, account: id)
     }
   }
@@ -118,7 +121,8 @@ final class GoogleAuth: AccessTokenProvider, @unchecked Sendable {
   private static func claims(_ jwt: String) -> [String: Any]? {
     let parts = jwt.split(separator: ".")
     guard parts.count >= 2 else { return nil }
-    var b64 = String(parts[1]).replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
+    var b64 = String(parts[1]).replacingOccurrences(of: "-", with: "+").replacingOccurrences(
+      of: "_", with: "/")
     while b64.count % 4 != 0 { b64 += "=" }
     guard let data = Data(base64Encoded: b64) else { return nil }
     return try? JSONSerialization.jsonObject(with: data) as? [String: Any]
