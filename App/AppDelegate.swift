@@ -9,14 +9,18 @@ extension KeyboardShortcuts.Name {
   static let togglePanel = Self("togglePanel", default: .init(.c, modifiers: [.control, .option]))
 }
 
-/// Bridges the UI protocols to the sync engine and the system (opening join links).
+/// Bridges the UI protocols to the sync engine, sign-in and the system (opening join links).
 final class AppActions: EventActions, AccountActions {
+  private let store: Store
   private let engine: SyncEngine
-  private let scheduler: SyncScheduler?
+  private let microsoft: MicrosoftAuth?
+  private let google: GoogleAuth?
 
-  init(engine: SyncEngine, scheduler: SyncScheduler?) {
+  init(store: Store, engine: SyncEngine, microsoft: MicrosoftAuth?, google: GoogleAuth?) {
+    self.store = store
     self.engine = engine
-    self.scheduler = scheduler
+    self.microsoft = microsoft
+    self.google = google
   }
 
   func join(_ event: EventInstance) {
@@ -37,13 +41,33 @@ final class AppActions: EventActions, AccountActions {
 
   func refresh() async { await engine.syncAll() }
 
-  // Real sign-in arrives with M3 / M4 (needs the OAuth client IDs).
-  func addAccount(provider: ProviderKind) async throws { throw AppActionError.notConfigured }
-  func removeAccount(_ account: Account) async throws { throw AppActionError.notConfigured }
-  func reconnect(_ account: Account) async throws { throw AppActionError.notConfigured }
-}
+  func addAccount(provider: ProviderKind) async throws {
+    let account: Account
+    switch provider {
+    case .microsoft:
+      guard let microsoft else { throw AuthError.notConfigured("The Microsoft client ID (MS_CLIENT_ID)") }
+      account = try await microsoft.signIn()
+    case .google:
+      guard let google else { throw AuthError.notConfigured("The Google client ID (GOOGLE_CLIENT_ID)") }
+      account = try await google.signIn()
+    case .mock:
+      return
+    }
+    try store.saveAccount(account)
+    await engine.sync(account: account)
+  }
 
-enum AppActionError: Error { case notConfigured }
+  func reconnect(_ account: Account) async throws {
+    try await addAccount(provider: account.provider)
+  }
+
+  /// Deletes the account's cached data and its tokens.
+  func removeAccount(_ account: Account) async throws {
+    microsoft?.signOut(account)
+    google?.signOut(account)
+    try store.deleteAccount(id: account.id)
+  }
+}
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -52,6 +76,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private var statusItem: StatusItemController?
   private var panel: PanelController?
   private var actions: AppActions?
+  private var googleAuth: GoogleAuth?
   private var scheduler: SyncScheduler?
   private var wakeObserver: NSObjectProtocol?
 
@@ -73,14 +98,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
     guard let store else { return }
 
-    var providers: [ProviderKind: CalendarProvider] = [:]
+    let microsoftAuth = Self.configured("MSClientID").flatMap { try? MicrosoftAuth(clientId: $0) }
+    let googleAuth = Self.configured("GoogleClientID").flatMap { id in
+      Self.configured("GoogleRedirectScheme").map { GoogleAuth(clientId: id, redirectScheme: $0) }
+    }
+    self.googleAuth = googleAuth
+    let http = HTTPClient(
+      transport: URLSession.shared,
+      tokens: CompositeTokenProvider(microsoft: microsoftAuth, google: googleAuth))
+    var providers: [ProviderKind: CalendarProvider] = [
+      .microsoft: MicrosoftProvider(client: http), .google: GoogleProvider(client: http),
+    ]
     #if DEBUG
       if useMock { providers[.mock] = MockCalendarProvider() }
     #endif
     let engine = SyncEngine(store: store, providers: providers)
     // Real accounts sync from M3 / M4; mock data never syncs.
     let scheduler: SyncScheduler? = useMock ? nil : SyncScheduler(engine: engine)
-    let actions = AppActions(engine: engine, scheduler: scheduler)
+    let actions = AppActions(
+      store: store, engine: engine, microsoft: microsoftAuth, google: googleAuth)
     self.actions = actions
     self.scheduler = scheduler
     scheduler?.start()
@@ -104,6 +140,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     self.viewModel = viewModel
     self.statusItem = statusItem
     self.panel = panel
+  }
+
+  /// Redirect URL from the Google sign-in sheet.
+  func application(_ application: NSApplication, open urls: [URL]) {
+    for url in urls { googleAuth?.resume(with: url) }
+  }
+
+  /// A non-empty Info.plist value (filled from Config/Secrets.xcconfig).
+  private static func configured(_ key: String) -> String? {
+    guard let value = Bundle.main.object(forInfoDictionaryKey: key) as? String, !value.isEmpty
+    else { return nil }
+    return value
   }
 
   private static var useMockData: Bool {
