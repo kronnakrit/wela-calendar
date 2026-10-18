@@ -8,7 +8,8 @@ final class SyncSchedulerTests: XCTestCase {
     let store = try Store()
     let account = Account(id: "a", provider: .mock, email: "x", displayName: "x")
     try store.saveAccount(account)
-    let cal = CalendarInfo(accountId: "a", providerCalendarId: "c", name: "C", providerColorHex: "#000000")
+    let cal = CalendarInfo(
+      accountId: "a", providerCalendarId: "c", name: "C", providerColorHex: "#000000")
     let provider = FakeProvider(calendars: [cal], events: [])
     let engine = SyncEngine(store: store, providers: [.mock: provider])
     let scheduler = SyncScheduler(engine: engine, interval: 0.05)

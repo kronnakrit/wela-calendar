@@ -13,7 +13,8 @@ public enum JoinURLResolver {
       {
         comps.scheme = "msteams"
         comps.host = nil
-        if let native = comps.url?.absoluteString.replacingOccurrences(of: "msteams:///", with: "msteams:/"),
+        if let native = comps.url?.absoluteString.replacingOccurrences(
+          of: "msteams:///", with: "msteams:/"),
           let u = URL(string: native)
         {
           out.append(u)

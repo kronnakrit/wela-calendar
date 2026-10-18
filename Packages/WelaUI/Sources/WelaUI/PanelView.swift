@@ -247,10 +247,15 @@ struct EventDetailView: View {
       if vm.canRespond(to: event) {
         HStack(spacing: 8) {
           ForEach(
-            [("Accept", ResponseStatus.accepted), ("Tentative", .tentative), ("Decline", .declined)],
+            [
+              ("Accept", ResponseStatus.accepted), ("Tentative", .tentative),
+              ("Decline", .declined),
+            ],
             id: \.0
           ) { label, response in
-            Button { vm.respond(to: event, with: response) } label: {
+            Button {
+              vm.respond(to: event, with: response)
+            } label: {
               Text(label).welaFont(12, weight: event.myResponse == response ? .bold : .regular)
                 .foregroundStyle(Theme.ink).padding(.horizontal, 12).padding(.vertical, 5)
                 .background(
