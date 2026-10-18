@@ -18,10 +18,13 @@ final class NotificationScheduler: NSObject, UNUserNotificationCenterDelegate {
 
   func configure() {
     center.delegate = self
-    let join = UNNotificationAction(identifier: Self.joinAction, title: "Join", options: [.foreground])
-    let snooze = UNNotificationAction(identifier: Self.snoozeAction, title: "Snooze 5 min", options: [])
+    let join = UNNotificationAction(
+      identifier: Self.joinAction, title: "Join", options: [.foreground])
+    let snooze = UNNotificationAction(
+      identifier: Self.snoozeAction, title: "Snooze 5 min", options: [])
     center.setNotificationCategories([
-      UNNotificationCategory(identifier: Self.withJoin, actions: [join, snooze], intentIdentifiers: []),
+      UNNotificationCategory(
+        identifier: Self.withJoin, actions: [join, snooze], intentIdentifiers: []),
       UNNotificationCategory(identifier: Self.plain, actions: [snooze], intentIdentifiers: []),
     ])
   }
@@ -31,7 +34,9 @@ final class NotificationScheduler: NSObject, UNUserNotificationCenterDelegate {
     center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
   }
 
-  func reschedule(events: [EventInstance], leadMinutes: Int, enabled: Bool, now: Date = Date()) async {
+  func reschedule(events: [EventInstance], leadMinutes: Int, enabled: Bool, now: Date = Date())
+    async
+  {
     let pending = await center.pendingNotificationRequests()
     let ours = pending.map(\.identifier).filter { $0.hasPrefix(Self.idPrefix) }
     center.removePendingNotificationRequests(withIdentifiers: ours)
@@ -46,18 +51,23 @@ final class NotificationScheduler: NSObject, UNUserNotificationCenterDelegate {
     for event in upcoming {
       let fire = event.start.addingTimeInterval(-Double(leadMinutes) * 60)
       guard fire > now else { continue }
-      if await schedule(event: event, after: fire.timeIntervalSince(now), now: now) == false { break }
+      if await schedule(event: event, after: fire.timeIntervalSince(now), now: now) == false {
+        break
+      }
       if ours.count >= Self.maxPending { break }
     }
   }
 
-  private func schedule(event: EventInstance, after delay: TimeInterval, now: Date, idSuffix: String = "")
+  private func schedule(
+    event: EventInstance, after delay: TimeInterval, now: Date, idSuffix: String = ""
+  )
     async -> Bool
   {
     let content = UNMutableNotificationContent()
     content.title = event.title
     let time = event.start.formatted(date: .omitted, time: .shortened)
-    content.body = [time, event.location].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+    content.body = [time, event.location].compactMap { $0 }.filter { !$0.isEmpty }.joined(
+      separator: " · ")
     content.sound = .default
     content.categoryIdentifier = event.joinURL != nil ? Self.withJoin : Self.plain
     content.userInfo = ["eventId": event.id]
@@ -83,7 +93,9 @@ final class NotificationScheduler: NSObject, UNUserNotificationCenterDelegate {
   nonisolated func userNotificationCenter(
     _ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse
   ) async {
-    guard let id = response.notification.request.content.userInfo["eventId"] as? String else { return }
+    guard let id = response.notification.request.content.userInfo["eventId"] as? String else {
+      return
+    }
     let action = response.actionIdentifier
     await MainActor.run {
       switch action {

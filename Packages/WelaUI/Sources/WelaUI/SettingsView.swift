@@ -78,7 +78,8 @@ public struct SettingsView: View {
   }
 
   private func statusText(_ a: Account) -> String {
-    let provider = a.provider == .microsoft ? "Microsoft" : a.provider == .google ? "Google" : "Demo"
+    let provider =
+      a.provider == .microsoft ? "Microsoft" : a.provider == .google ? "Google" : "Demo"
     switch a.status {
     case .ok: return provider
     case .needsSignIn: return "\(provider) · needs sign-in"
@@ -123,7 +124,8 @@ public struct SettingsView: View {
         }
       }
       .disabled(!settings.notificationsEnabled)
-      Text("Calendar-provided reminders are used when present.").font(.caption).foregroundStyle(.secondary)
+      Text("Calendar-provided reminders are used when present.").font(.caption).foregroundStyle(
+        .secondary)
     }
     .formStyle(.grouped)
   }

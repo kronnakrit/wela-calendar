@@ -208,8 +208,11 @@ struct FirstRunView: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 18) {
-      Text("Welcome to Wela").welaFont(26, weight: .semibold, serif: true).foregroundStyle(Theme.ink)
-      step(1, "Connect your calendars", "Sign in with the accounts you use. Events are fetched straight to this Mac.")
+      Text("Welcome to Wela").welaFont(26, weight: .semibold, serif: true).foregroundStyle(
+        Theme.ink)
+      step(
+        1, "Connect your calendars",
+        "Sign in with the accounts you use. Events are fetched straight to this Mac.")
       HStack(spacing: 10) {
         connectButton("Connect Microsoft", .microsoft)
         connectButton("Connect Google", .google)
@@ -218,9 +221,11 @@ struct FirstRunView: View {
         Text(error).welaFont(11.5).foregroundStyle(Theme.redPen)
       }
       step(2, "Choose calendars", "Pick which calendars show up from the filter at the bottom.")
-      step(3, "Set your shortcut",
+      step(
+        3, "Set your shortcut",
         vm.hotkeyDescription.isEmpty
-          ? "Open the panel from anywhere with a global shortcut." : "Press \(vm.hotkeyDescription) to open the panel from anywhere.")
+          ? "Open the panel from anywhere with a global shortcut."
+          : "Press \(vm.hotkeyDescription) to open the panel from anywhere.")
       Spacer()
       HStack {
         Spacer()
@@ -238,7 +243,9 @@ struct FirstRunView: View {
   }
 
   private func connectButton(_ title: String, _ provider: ProviderKind) -> some View {
-    Button { vm.connect(provider) } label: {
+    Button {
+      vm.connect(provider)
+    } label: {
       Text(title).welaFont(12, weight: .semibold).foregroundStyle(Theme.onBlue)
         .padding(.horizontal, 14).padding(.vertical, 7).background(Capsule().fill(Theme.blueInk))
     }

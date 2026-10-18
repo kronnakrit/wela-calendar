@@ -171,7 +171,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         in: DateInterval(start: Date().addingTimeInterval(-3600), duration: 14 * 86_400))
       for await events in stream {
         await notifier.reschedule(
-          events: events, leadMinutes: settings.alertLeadMinutes, enabled: settings.notificationsEnabled)
+          events: events, leadMinutes: settings.alertLeadMinutes,
+          enabled: settings.notificationsEnabled)
       }
     }
   }

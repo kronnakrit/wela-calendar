@@ -7,7 +7,9 @@ import WelaCore
 @MainActor
 public final class SettingsModel: ObservableObject {
   public enum WeekStart: Int, CaseIterable, Identifiable {
-    case system = 0, sunday = 1, monday = 2
+    case system = 0
+    case sunday = 1
+    case monday = 2
     public var id: Int { rawValue }
     public var title: String {
       switch self {
@@ -64,19 +66,24 @@ public final class SettingsModel: ObservableObject {
   @Published public var calendarSystem: CalendarSystem {
     didSet { save("calendarSystem", calendarSystem.rawValue) }
   }
-  @Published public var timeFormat: TimeFormat { didSet { save("timeFormat", timeFormat.rawValue) } }
+  @Published public var timeFormat: TimeFormat {
+    didSet { save("timeFormat", timeFormat.rawValue) }
+  }
   @Published public var textSize: TextSize { didSet { save("textSize", textSize.rawValue) } }
   @Published public var showCancelled: Bool { didSet { save("showCancelled", showCancelled) } }
   @Published public var showDeclined: Bool { didSet { save("showDeclined", showDeclined) } }
   @Published public var notificationsEnabled: Bool {
     didSet { save("notificationsEnabled", notificationsEnabled) }
   }
-  @Published public var alertLeadMinutes: Int { didSet { save("alertLeadMinutes", alertLeadMinutes) } }
+  @Published public var alertLeadMinutes: Int {
+    didSet { save("alertLeadMinutes", alertLeadMinutes) }
+  }
 
   public init(defaults: UserDefaults = .standard) {
     self.defaults = defaults
     weekStart = WeekStart(rawValue: defaults.integer(forKey: "weekStart")) ?? .system
-    calendarSystem = CalendarSystem(rawValue: defaults.string(forKey: "calendarSystem") ?? "") ?? .system
+    calendarSystem =
+      CalendarSystem(rawValue: defaults.string(forKey: "calendarSystem") ?? "") ?? .system
     timeFormat = TimeFormat(rawValue: defaults.string(forKey: "timeFormat") ?? "") ?? .system
     textSize = TextSize(rawValue: defaults.string(forKey: "textSize") ?? "") ?? .normal
     showCancelled = defaults.object(forKey: "showCancelled") as? Bool ?? true
