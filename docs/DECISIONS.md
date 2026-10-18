@@ -9,3 +9,8 @@ One line each: what was chosen, and why.
 - `Day N of M` labels are English-only until the M7 localization pass.
 - FTS5 uses the `unicode61` tokenizer, which does not segment Thai words; prefix matching still works. Revisit in M7.
 - All-day events keep `start`/`end` at UTC midnight of their dates purely for range queries; placement uses `startDay`/`endDay`.
+- Providers (`MicrosoftProvider`, `GoogleProvider`) talk through an injected `HTTPClient` + `AccessTokenProvider`. MSAL / AppAuth plug in later as token providers, so sync logic is tested now without credentials or those dependencies.
+- Provider fixtures are inline JSON strings in the test files rather than files under `Tests/Fixtures/`, to avoid SwiftPM resource plumbing.
+- Google initial sync tries `timeMin` + `timeMax` first and falls back to unbounded (trimmed locally) if no `nextSyncToken` comes back. **Still to verify against a real account**, as the plan requires; record the result here.
+- RSVP: Google reads the event first and sends the fresh etag in `If-Match` (read-modify-write); on 412 it re-reads and retries once.
+- Offline writes stay in the outbox (optimistic row kept); any other failure rolls the row back and is reported to the caller.

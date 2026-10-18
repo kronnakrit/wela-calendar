@@ -38,6 +38,8 @@ Code complete and CI-green; waiting on the manual checks in `MANUAL_TESTS.md` (v
 
 ## M3. Microsoft sign-in and sync (first, because the owner's main calendar is Outlook)
 
+Groundwork done and CI-green: `MicrosoftProvider` (delta sync, window roll, Retry-After, RSVP) with fixture tests. Still open: MSAL sign-in, Keychain entitlement, Settings → Accounts, real-account check. Needs the Entra client ID.
+
 - [ ] Add the Keychain access group entitlement `$(AppIdentifierPrefix)com.microsoft.identity.universalstorage` (MSA
 - [ ] `MicrosoftAuth` (MSAL):
 - [ ] `MicrosoftProvider`:
@@ -46,12 +48,16 @@ Code complete and CI-green; waiting on the manual checks in `MANUAL_TESTS.md` (v
 
 ## M4. Google sign-in and sync
 
+Groundwork done and CI-green: `GoogleProvider` (initial/incremental sync, 410 recovery, RSVP) with fixture tests. Still open: AppAuth sign-in, the real-account check of the bounded initial sync. Needs the Google OAuth client.
+
 - [ ] `GoogleAuth` (AppAuth):
 - [ ] `GoogleProvider`:
 - [ ] Settings → Accounts: "Add Google account" runs sign-in and adds the account and its calendars, all visible by 
 - [ ] Unit tests with recorded JSON fixtures in `Tests/Fixtures/google/`, covering:
 
 ## M5. Sync engine, actions, outbox
+
+Groundwork done and CI-green: `SyncEngine` (per-calendar no-double-run, errors keep data) and the RSVP outbox (optimistic, offline queue, rollback). Still open: 60 s polling / wake / network triggers, Join via native apps, full detail card, footer "Last synced" and Reconnect banner.
 
 - [ ] `SyncEngine` actor:
 - [ ] Errors never clear existing data.
