@@ -6,6 +6,9 @@ import WelaCore
 @MainActor
 public final class PanelViewModel: ObservableObject {
   public let store: Store
+  public let settings: SettingsModel
+  /// Shown on the first-run screen, e.g. "Control-Option-C".
+  public var hotkeyDescription = ""
   public weak var actions: EventActions?
   public weak var accountActions: AccountActions?
   public var calendar: Calendar { didSet { restartObservation() } }
@@ -36,11 +39,18 @@ public final class PanelViewModel: ObservableObject {
   private var lastClosedAt: Date?
   private let rememberMonthFor: TimeInterval = 5 * 60
 
+  private let baseCalendar: Calendar
+  private var cancellables: Set<AnyCancellable> = []
+  @Published public private(set) var connectError: String?
+
   public init(
     store: Store, actions: EventActions? = nil, calendar: Calendar = .current,
-    locale: Locale = .current, now: Date = Date()
+    locale: Locale = .current, now: Date = Date(), settings: SettingsModel? = nil
   ) {
     self.store = store
+    self.settings = settings ?? SettingsModel()
+    self.baseCalendar = calendar
+    self.accounts = (try? store.accounts()) ?? []
     self.actions = actions
     self.calendar = calendar
     self.locale = locale
@@ -50,6 +60,39 @@ public final class PanelViewModel: ObservableObject {
     restartObservation()
     observeCalendars()
     observeAccounts()
+    applySettings()
+    self.settings.objectWillChange
+      .sink { [weak self] _ in DispatchQueue.main.async { self?.applySettings() } }
+      .store(in: &cancellables)
+  }
+
+  private func applySettings() {
+    let cal = settings.makeCalendar(base: baseCalendar)
+    if cal != calendar {
+      calendar = cal
+      selectedDay = cal.startOfDay(for: selectedDay)
+    }
+    options = settings.agendaOptions
+    objectWillChange.send()
+  }
+
+  public func connect(_ provider: ProviderKind) {
+    connectError = nil
+    Task { [weak self] in
+      do {
+        try await self?.accountActions?.addAccount(provider: provider)
+      } catch {
+        self?.connectError = error.localizedDescription
+      }
+    }
+  }
+
+  public func remove(_ account: Account) {
+    Task { [weak self] in try? await self?.accountActions?.removeAccount(account) }
+  }
+
+  public func setCalendarColor(_ id: String, hex: String?) {
+    try? store.setCalendarColor(id: id, hex: hex)
   }
 
   deinit {
@@ -201,7 +244,7 @@ public final class PanelViewModel: ObservableObject {
     return f.string(from: date)
   }
 
-  func timeString(_ date: Date) -> String { formatted(date, "jm") }
+  func timeString(_ date: Date) -> String { formatted(date, settings.timeTemplate) }
 
   func timeRange(for event: EventInstance) -> String {
     event.isAllDay
@@ -304,7 +347,7 @@ public final class PanelViewModel: ObservableObject {
       return false
     }
     guard isOffline || erroring, let last = lastSyncedAt else { return nil }
-    return "Last synced \(formatted(last, "jm"))"
+    return "Last synced \(formatted(last, settings.timeTemplate))"
   }
 
   public func setCalendarVisible(_ id: String, _ visible: Bool) {

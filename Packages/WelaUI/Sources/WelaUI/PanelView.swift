@@ -21,6 +21,7 @@ public struct PanelView: View {
       }
     }
     .animation(WelaAnimation.standard(reduceMotion: reduceMotion), value: vm.detailEventID)
+    .environment(\.welaTextScale, vm.settings.textSize.scale)
     .frame(width: 340, height: 640)
     .background(Theme.page)
     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -40,7 +41,16 @@ public struct PanelView: View {
     }
   }
 
+  @ViewBuilder
   private var main: some View {
+    if vm.accounts.isEmpty {
+      FirstRunView(vm: vm)
+    } else {
+      calendarPanel
+    }
+  }
+
+  private var calendarPanel: some View {
     VStack(spacing: 0) {
       SearchField(text: $vm.searchText, focus: $focus)
         .padding(.horizontal, 16).padding(.top, 14).padding(.bottom, 8)
@@ -190,6 +200,49 @@ struct FooterView: View {
       .accessibilityLabel("Settings")
     }
     .foregroundStyle(Theme.softInk)
+  }
+}
+
+struct FirstRunView: View {
+  @ObservedObject var vm: PanelViewModel
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 18) {
+      Text("Welcome to Wela").welaFont(26, weight: .semibold, serif: true).foregroundStyle(Theme.ink)
+      step(1, "Connect your calendars", "Sign in with the accounts you use. Events are fetched straight to this Mac.")
+      HStack(spacing: 10) {
+        connectButton("Connect Microsoft", .microsoft)
+        connectButton("Connect Google", .google)
+      }
+      if let error = vm.connectError {
+        Text(error).welaFont(11.5).foregroundStyle(Theme.redPen)
+      }
+      step(2, "Choose calendars", "Pick which calendars show up from the filter at the bottom.")
+      step(3, "Set your shortcut",
+        vm.hotkeyDescription.isEmpty
+          ? "Open the panel from anywhere with a global shortcut." : "Press \(vm.hotkeyDescription) to open the panel from anywhere.")
+      Spacer()
+      HStack {
+        Spacer()
+        FooterView(vm: vm)
+      }
+    }
+    .padding(20)
+  }
+
+  private func step(_ n: Int, _ title: String, _ detail: String) -> some View {
+    VStack(alignment: .leading, spacing: 3) {
+      Text("\(n). \(title)").welaFont(14, weight: .semibold).foregroundStyle(Theme.ink)
+      Text(detail).welaFont(12).foregroundStyle(Theme.softInk)
+    }
+  }
+
+  private func connectButton(_ title: String, _ provider: ProviderKind) -> some View {
+    Button { vm.connect(provider) } label: {
+      Text(title).welaFont(12, weight: .semibold).foregroundStyle(Theme.onBlue)
+        .padding(.horizontal, 14).padding(.vertical, 7).background(Capsule().fill(Theme.blueInk))
+    }
+    .buttonStyle(.plain)
   }
 }
 

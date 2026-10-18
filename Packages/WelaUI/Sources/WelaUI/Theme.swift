@@ -63,6 +63,16 @@ public enum Theme {
   }
 }
 
+extension Color {
+  /// "#RRGGBB" for a colour (used to store user colour overrides).
+  var hexString: String {
+    let ns = NSColor(self).usingColorSpace(.sRGB) ?? .gray
+    return String(
+      format: "#%02X%02X%02X", Int((ns.redComponent * 255).rounded()),
+      Int((ns.greenComponent * 255).rounded()), Int((ns.blueComponent * 255).rounded()))
+  }
+}
+
 // MARK: Text size
 
 private struct TextScaleKey: EnvironmentKey { static let defaultValue: CGFloat = 1 }

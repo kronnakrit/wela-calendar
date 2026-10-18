@@ -13,6 +13,7 @@ extension KeyboardShortcuts.Name {
 final class AppActions: EventActions, AccountActions {
   private let store: Store
   private let engine: SyncEngine
+  var onAccountAdded: (@MainActor () -> Void)?
   private let microsoft: MicrosoftAuth?
   private let google: GoogleAuth?
 
@@ -58,6 +59,7 @@ final class AppActions: EventActions, AccountActions {
       return
     }
     try store.saveAccount(account)
+    await MainActor.run { onAccountAdded?() }
     await engine.sync(account: account)
   }
 
@@ -80,6 +82,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private var statusItem: StatusItemController?
   private var panel: PanelController?
   private var actions: AppActions?
+  private let settingsWindow = SettingsWindowController()
+  private let notifier = NotificationScheduler()
+  private var notificationTask: Task<Void, Never>?
   private var googleAuth: GoogleAuth?
   private var scheduler: SyncScheduler?
   private var wakeObserver: NSObjectProtocol?
@@ -132,6 +137,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     let viewModel = PanelViewModel(store: store, actions: actions)
     viewModel.accountActions = actions
+    viewModel.hotkeyDescription =
+      KeyboardShortcuts.getShortcut(for: .togglePanel).map { String(describing: $0) } ?? ""
+    viewModel.onOpenSettings = { [weak self, weak viewModel] in
+      guard let self, let viewModel else { return }
+      self.panel?.close()
+      self.settingsWindow.show(viewModel: viewModel)
+    }
+    startNotifications(store: store, settings: viewModel.settings)
+    actions.onAccountAdded = { [weak self] in self?.notifier.requestAuthorization() }
     scheduler?.onReachabilityChange = { [weak viewModel] online in
       Task { @MainActor in viewModel?.isOffline = !online }
     }
@@ -144,6 +158,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     self.viewModel = viewModel
     self.statusItem = statusItem
     self.panel = panel
+  }
+
+  private func startNotifications(store: Store, settings: SettingsModel) {
+    notifier.configure()
+    notifier.onJoin = { [weak self] id in
+      if let event = try? store.event(id: id) { self?.actions?.join(event) }
+    }
+    notificationTask = Task { [notifier] in
+      // Re-plan whenever events change, and hourly so the 48-hour window keeps sliding.
+      let stream = store.observeEvents(
+        in: DateInterval(start: Date().addingTimeInterval(-3600), duration: 14 * 86_400))
+      for await events in stream {
+        await notifier.reschedule(
+          events: events, leadMinutes: settings.alertLeadMinutes, enabled: settings.notificationsEnabled)
+      }
+    }
   }
 
   /// Redirect URL from the Google sign-in sheet.
