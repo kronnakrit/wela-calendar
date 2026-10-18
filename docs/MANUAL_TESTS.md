@@ -27,3 +27,15 @@ Run `make bootstrap gen run` (launches Debug with `-UseMockData`).
 10. **Open time:** record warm-open time here with `os_signpost` (target < 150 ms). Not instrumented yet: add signposts around `PanelController.show()` and measure in Instruments.
 
 Results: _pending_
+
+## M5/M6 (needs credentials and a Mac)
+
+1. **Microsoft sign-in:** First-run → Connect Outlook; complete sign-in; events appear within seconds; quit and relaunch: still signed in.
+2. **Google sign-in:** same with Google; record whether the bounded initial sync returned a `nextSyncToken` (see DECISIONS.md).
+3. **RSVP:** Accept/Tentative/Decline on a real event; check it in Outlook / Google Calendar. Turn Wi-Fi off, respond, turn on: it syncs.
+4. **Join:** Cmd-J on a Teams/Zoom/Meet event opens the native app (or browser).
+5. **Notifications:** allow when asked; an event 5 min away produces a banner with Join and Snooze; Snooze re-fires after 5 min.
+6. **Settings:** week start, calendar system, 12/24 h, text size apply live; launch at login toggles in System Settings → Login Items; hotkey recorder changes the shortcut.
+7. **Accounts tab:** remove an account: its events disappear.
+
+Results: _pending_

@@ -92,3 +92,7 @@ Groundwork done and CI-green: `SyncEngine` (per-calendar no-double-run, errors k
 - [ ] **[HUMAN]**:
 - [ ] Write `README.md` (build, configure secrets, architecture overview) and `PRIVACY.md`.
 
+
+
+## Status note
+M3-M6 credential-free parts are in: providers, sync engine, outbox RSVP, join, MSAL/AppAuth wiring, settings window, first-run, notifications. Waiting on user: client IDs; Mac-only manual tests. Remaining: detail-card extras, search key handling, M7 hardening, M8.

@@ -14,3 +14,6 @@ One line each: what was chosen, and why.
 - Google initial sync tries `timeMin` + `timeMax` first and falls back to unbounded (trimmed locally) if no `nextSyncToken` comes back. **Still to verify against a real account**, as the plan requires; record the result here.
 - RSVP: Google reads the event first and sends the fresh etag in `If-Match` (read-modify-write); on 412 it re-reads and retries once.
 - Offline writes stay in the outbox (optimistic row kept); any other failure rolls the row back and is reported to the caller.
+- Auth: MSAL (Microsoft) and AppAuth (Google) live in the app target (`App/Auth`) and expose `AccessTokenProvider`s; client IDs come from `Config/Secrets.xcconfig` via Info.plist. Nothing in the packages knows about them.
+- Entitlements are split: `App/Wela.entitlements` (sandbox + network) is used by default so ad-hoc signed test builds run; `App/Wela.signed.entitlements` adds the MSAL keychain group and is used once `DEVELOPMENT_TEAM` is set.
+- Settings are UserDefaults-backed (`SettingsModel`); the VM re-applies them on `objectWillChange`. Notifications are scheduled for a 48 h horizon with Join / Snooze 5 min actions.
