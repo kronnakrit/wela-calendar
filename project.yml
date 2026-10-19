@@ -1,0 +1,84 @@
+name: Wela
+options:
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+configFiles:
+  Debug: Config/Base.xcconfig
+  Release: Config/Base.xcconfig
+packages:
+  WelaCore:
+    path: Packages/WelaCore
+  WelaSync:
+    path: Packages/WelaSync
+  WelaUI:
+    path: Packages/WelaUI
+  KeyboardShortcuts:
+    url: https://github.com/sindresorhus/KeyboardShortcuts
+    from: 2.0.0
+  MSAL:
+    url: https://github.com/AzureAD/microsoft-authentication-library-for-objc
+    from: 1.4.0
+  AppAuth:
+    url: https://github.com/openid/AppAuth-iOS
+    from: 1.7.0
+targets:
+  Wela:
+    type: application
+    platform: macOS
+    sources:
+      - App
+    dependencies:
+      - package: WelaCore
+      - package: WelaSync
+      - package: WelaUI
+      - package: KeyboardShortcuts
+      - package: MSAL
+      - package: AppAuth
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleName: Wela
+        CFBundleDisplayName: Wela Calendar
+        LSUIElement: true
+        LSMinimumSystemVersion: "14.0"
+        MSClientID: $(MS_CLIENT_ID)
+        GoogleClientID: $(GOOGLE_CLIENT_ID)
+        GoogleRedirectScheme: $(GOOGLE_REDIRECT_SCHEME)
+        CFBundleURLTypes:
+          - CFBundleURLName: google-oauth-redirect
+            CFBundleURLSchemes:
+              - $(GOOGLE_REDIRECT_SCHEME)
+          - CFBundleURLName: microsoft-auth-redirect
+            CFBundleURLSchemes:
+              - msauth.$(WELA_BUNDLE_ID)
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(WELA_BUNDLE_ID)
+        PRODUCT_NAME: Wela
+        CODE_SIGN_ENTITLEMENTS: $(WELA_ENTITLEMENTS)
+        ARCHS: "$(ARCHS_STANDARD)"
+        ENABLE_HARDENED_RUNTIME: true
+        GENERATE_INFOPLIST_FILE: false
+  WelaAppTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - AppTests
+    dependencies:
+      - target: Wela
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(WELA_BUNDLE_ID).tests
+        GENERATE_INFOPLIST_FILE: true
+schemes:
+  Wela:
+    build:
+      targets:
+        Wela: all
+    run:
+      commandLineArguments:
+        "-UseMockData": true
+    test:
+      targets:
+        - WelaAppTests
