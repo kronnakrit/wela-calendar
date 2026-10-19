@@ -172,7 +172,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let reload: @MainActor () async -> Void = { [notifier] in
       let now = Date()
       let events =
-        (try? store.events(in: DateInterval(start: now.addingTimeInterval(-3600), duration: 3 * 86_400)))
+        (try? store.events(
+          in: DateInterval(start: now.addingTimeInterval(-3600), duration: 3 * 86_400)))
         ?? []
       await notifier.reschedule(
         events: events, leadMinutes: settings.alertLeadMinutes,
