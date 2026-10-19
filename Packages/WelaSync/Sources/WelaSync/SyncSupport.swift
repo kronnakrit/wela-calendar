@@ -129,6 +129,16 @@ enum DateParsing {
 
 func percentEncodePathComponent(_ s: String) -> String {
   var allowed = CharacterSet.urlPathAllowed
-  allowed.remove(charactersIn: "/")
+  allowed.remove(charactersIn: "/?#")
   return s.addingPercentEncoding(withAllowedCharacters: allowed) ?? s
+}
+
+/// Appends an already percent-encoded path to `base`. `URL.appendingPathComponent` would escape
+/// the `%` of ids that were encoded with `percentEncodePathComponent` a second time.
+func encodedEndpoint(_ base: URL, _ encodedPath: String) -> URL {
+  guard var components = URLComponents(url: base, resolvingAgainstBaseURL: false) else {
+    return base.appendingPathComponent(encodedPath)
+  }
+  components.percentEncodedPath += "/" + encodedPath
+  return components.url ?? base
 }

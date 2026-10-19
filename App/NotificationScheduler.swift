@@ -38,7 +38,9 @@ final class NotificationScheduler: NSObject, UNUserNotificationCenterDelegate {
     async
   {
     let pending = await center.pendingNotificationRequests()
-    let ours = pending.map(\.identifier).filter { $0.hasPrefix(Self.idPrefix) }
+    let ours = pending.map(\.identifier).filter {
+      $0.hasPrefix(Self.idPrefix) && !$0.hasSuffix(".snooze")  // keep pending snoozes
+    }
     center.removePendingNotificationRequests(withIdentifiers: ours)
     guard enabled else { return }
     let upcoming =
@@ -48,13 +50,15 @@ final class NotificationScheduler: NSObject, UNUserNotificationCenterDelegate {
           && $0.start > now && $0.start.timeIntervalSince(now) <= Self.horizon
       }
       .sorted { $0.start < $1.start }
+    var scheduled = 0
     for event in upcoming {
       let fire = event.start.addingTimeInterval(-Double(leadMinutes) * 60)
       guard fire > now else { continue }
       if await schedule(event: event, after: fire.timeIntervalSince(now), now: now) == false {
         break
       }
-      if ours.count >= Self.maxPending { break }
+      scheduled += 1
+      if scheduled >= Self.maxPending { break }
     }
   }
 

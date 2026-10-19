@@ -80,7 +80,7 @@ final class GoogleAuth: AccessTokenProvider, @unchecked Sendable {
         } else if let error = error as NSError?, error.domain == OIDOAuthTokenErrorDomain {
           cont.resume(throwing: SyncError.needsSignIn)  // e.g. invalid_grant: token revoked
         } else {
-          cont.resume(throwing: error ?? SyncError.needsSignIn)
+          cont.resume(throwing: mapTokenError(error))
         }
       }
     }

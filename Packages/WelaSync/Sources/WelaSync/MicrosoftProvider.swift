@@ -73,9 +73,7 @@ public struct MicrosoftProvider: CalendarProvider {
     let start = now.addingTimeInterval(-Double(pastDays) * 86_400)
     let end = now.addingTimeInterval(Double(futureDays) * 86_400)
     var comps = URLComponents(
-      url: Self.baseURL.appendingPathComponent(
-        "me/calendars/\(percentEncodePathComponent(calendar.providerCalendarId))/calendarView/delta"
-      ),
+      url: encodedEndpoint(Self.baseURL, "me/calendars/\(percentEncodePathComponent(calendar.providerCalendarId))/calendarView/delta"),
       resolvingAgainstBaseURL: false)!
     comps.queryItems = [
       URLQueryItem(name: "startDateTime", value: DateParsing.utcString(start)),
@@ -121,8 +119,7 @@ public struct MicrosoftProvider: CalendarProvider {
     case .declined: action = "decline"
     default: throw SyncError.invalidResponse("cannot send \(response.rawValue)")
     }
-    let url = Self.baseURL.appendingPathComponent(
-      "me/events/\(percentEncodePathComponent(event.providerEventId))/\(action)")
+    let url = encodedEndpoint(Self.baseURL, "me/events/\(percentEncodePathComponent(event.providerEventId))/\(action)")
     var req = URLRequest(url: url)
     req.httpMethod = "POST"
     req.setValue("application/json", forHTTPHeaderField: "Content-Type")

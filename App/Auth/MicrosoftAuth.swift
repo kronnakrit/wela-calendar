@@ -62,7 +62,7 @@ final class MicrosoftAuth: AccessTokenProvider, @unchecked Sendable {
         {
           cont.resume(throwing: SyncError.needsSignIn)
         } else {
-          cont.resume(throwing: error ?? SyncError.needsSignIn)
+          cont.resume(throwing: mapTokenError(error))
         }
       }
     }

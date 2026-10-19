@@ -97,8 +97,7 @@ public struct GoogleProvider: CalendarProvider {
     var syncToken: String?
     repeat {
       var comps = URLComponents(
-        url: Self.baseURL.appendingPathComponent(
-          "calendars/\(percentEncodePathComponent(calendar.providerCalendarId))/events"),
+        url: encodedEndpoint(Self.baseURL, "calendars/\(percentEncodePathComponent(calendar.providerCalendarId))/events"),
         resolvingAgainstBaseURL: false)!
       var items = [
         URLQueryItem(name: "singleEvents", value: "true"),
@@ -128,9 +127,7 @@ public struct GoogleProvider: CalendarProvider {
     case .declined: status = "declined"
     default: throw SyncError.invalidResponse("cannot send \(response.rawValue)")
     }
-    let url = Self.baseURL.appendingPathComponent(
-      "calendars/\(percentEncodePathComponent(calendar.providerCalendarId))/events/\(percentEncodePathComponent(event.providerEventId))"
-    )
+    let url = encodedEndpoint(Self.baseURL, "calendars/\(percentEncodePathComponent(calendar.providerCalendarId))/events/\(percentEncodePathComponent(event.providerEventId))")
     // Read-modify-write: fetch the current attendees and etag first.
     var etag: String?
     var attendees = try await currentAttendees(url: url, account: account, etag: &etag)

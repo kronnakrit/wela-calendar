@@ -63,9 +63,20 @@ public actor SyncEngine {
       for gone in existing.keys where !merged.contains(where: { $0.id == gone }) {
         try store.deleteCalendar(id: gone)
       }
+      // One unreadable calendar (a 403 on a free/busy or shared calendar) must not stop the rest.
+      var firstError: Error?
       for cal in merged {
-        try await syncCalendar(account: account, calendar: cal, provider: provider)
+        do {
+          try await syncCalendar(account: account, calendar: cal, provider: provider)
+        } catch SyncError.needsSignIn {
+          throw SyncError.needsSignIn
+        } catch SyncError.offline {
+          throw SyncError.offline
+        } catch {
+          firstError = firstError ?? error
+        }
       }
+      if let firstError, merged.count == 1 { throw firstError }
       setStatus(account.id, .ok)
     } catch SyncError.needsSignIn {
       setStatus(account.id, .needsSignIn)
@@ -132,8 +143,9 @@ public actor SyncEngine {
     defer { flushing = false }
     var failures: [RSVPFailure] = []
     var stuck: Set<Int64> = []
+    var stuckEvents: Set<String> = []
     while let item = ((try? store.pendingOutbox()) ?? []).first(where: {
-      !stuck.contains($0.id ?? -1)
+      !stuck.contains($0.id ?? -1) && !stuckEvents.contains($0.eventId)
     }) {
       guard let id = item.id else { break }
       switch await send(item) {
@@ -141,6 +153,7 @@ public actor SyncEngine {
         try? store.removeOutboxItem(id: id)
       case .retryLater:
         stuck.insert(id)
+        stuckEvents.insert(item.eventId)
       case .failed(let message, let previous):
         if let previous, var event = try? store.event(id: item.eventId) {
           event.myResponse = previous
@@ -176,6 +189,12 @@ public actor SyncEngine {
       return .retryLater
     } catch SyncError.needsSignIn {
       setStatus(account.id, .needsSignIn)
+      return .retryLater
+    } catch SyncError.rateLimited {
+      return .retryLater
+    } catch SyncError.http(let status, _) where status >= 500 {
+      return .retryLater
+    } catch is URLError {
       return .retryLater
     } catch {
       return .failed(String(describing: error), previous: payload.previous)

@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import KeyboardShortcuts
 import WelaCore
 import WelaSync
@@ -25,11 +26,13 @@ final class AppActions: EventActions, AccountActions {
   }
 
   func join(_ event: EventInstance) {
-    guard let url = event.joinURL else { return }
+    guard let url = event.joinURL, url.scheme?.lowercased() == "https" else { return }
     // Native app first (msteams:, zoommtg:), falling back to the https link.
     for candidate in JoinURLResolver.candidates(for: url, kind: event.conferenceKind) {
-      let isWeb = candidate.scheme == "https" || candidate.scheme == "http"
-      if isWeb || NSWorkspace.shared.urlForApplication(toOpen: candidate) != nil {
+      // Provider-supplied links are untrusted: only https and the app schemes we build ourselves.
+      let scheme = candidate.scheme?.lowercased()
+      guard scheme == "https" || scheme == "msteams" || scheme == "zoommtg" else { continue }
+      if scheme == "https" || NSWorkspace.shared.urlForApplication(toOpen: candidate) != nil {
         NSWorkspace.shared.open(candidate)
         return
       }
@@ -85,6 +88,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private let settingsWindow = SettingsWindowController()
   private let notifier = NotificationScheduler()
   private var notificationTask: Task<Void, Never>?
+  private var settingsObserver: AnyCancellable?
   private var googleAuth: GoogleAuth?
   private var scheduler: SyncScheduler?
   private var wakeObserver: NSObjectProtocol?
@@ -165,14 +169,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     notifier.onJoin = { [weak self] id in
       if let event = try? store.event(id: id) { self?.actions?.join(event) }
     }
-    notificationTask = Task { [notifier] in
-      // Re-plan whenever events change, and hourly so the 48-hour window keeps sliding.
-      let stream = store.observeEvents(
-        in: DateInterval(start: Date().addingTimeInterval(-3600), duration: 14 * 86_400))
-      for await events in stream {
-        await notifier.reschedule(
-          events: events, leadMinutes: settings.alertLeadMinutes,
-          enabled: settings.notificationsEnabled)
+    let reload: @MainActor () async -> Void = { [notifier] in
+      let now = Date()
+      let events =
+        (try? store.events(in: DateInterval(start: now.addingTimeInterval(-3600), duration: 3 * 86_400)))
+        ?? []
+      await notifier.reschedule(
+        events: events, leadMinutes: settings.alertLeadMinutes,
+        enabled: settings.notificationsEnabled)
+    }
+    // Settings changes re-plan too (objectWillChange fires before the value lands, so hop a turn).
+    settingsObserver = settings.objectWillChange.sink { _ in
+      Task { @MainActor in
+        try? await Task.sleep(for: .milliseconds(100))
+        await reload()
+      }
+    }
+    notificationTask = Task {
+      // Re-plan whenever events change, and restart the observation every 30 minutes so the
+      // 48-hour window keeps sliding on a long-running menu bar app.
+      while !Task.isCancelled {
+        let start = Date()
+        let observer = Task {
+          for await _ in store.observeEvents(
+            in: DateInterval(start: start.addingTimeInterval(-3600), duration: 3 * 86_400))
+          {
+            await reload()
+          }
+        }
+        try? await Task.sleep(for: .seconds(1800))
+        observer.cancel()
       }
     }
   }

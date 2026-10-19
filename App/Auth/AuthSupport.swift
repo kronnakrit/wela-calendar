@@ -105,3 +105,15 @@ struct CompositeTokenProvider: AccessTokenProvider {
     }
   }
 }
+
+/// Token refresh failures that are really "no network" must surface as `SyncError.offline` so the
+/// sync engine keeps cached data and queued RSVPs instead of reporting an account error.
+func mapTokenError(_ error: Error?) -> Error {
+  guard let error else { return SyncError.needsSignIn }
+  var current: NSError? = error as NSError
+  while let e = current {
+    if e.domain == NSURLErrorDomain { return SyncError.offline }
+    current = e.userInfo[NSUnderlyingErrorKey] as? NSError
+  }
+  return error
+}
