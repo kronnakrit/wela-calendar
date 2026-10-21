@@ -1,10 +1,11 @@
+import WelaCore
+import WelaSync
+
 #if os(macOS)
   import AppKit
 #else
   import UIKit
 #endif
-import WelaCore
-import WelaSync
 
 /// Bridges the UI protocols to the sync engine, sign-in and the system (opening join links).
 final class AppActions: EventActions, AccountActions {

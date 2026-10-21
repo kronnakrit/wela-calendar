@@ -52,7 +52,8 @@ struct SnapshotProvider: TimelineProvider {
     Task { @MainActor in
       let first = Self.load().first ?? .empty()
       // The widget gallery shows sample events until an account is connected.
-      completion(SnapshotEntry(snapshot: context.isPreview && !first.hasAccounts ? .sample() : first))
+      completion(
+        SnapshotEntry(snapshot: context.isPreview && !first.hasAccounts ? .sample() : first))
     }
   }
 

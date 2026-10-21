@@ -189,7 +189,8 @@ public struct WidgetSnapshot: Hashable, Sendable {
     let calendar = settings.makeCalendar(base: .current)
     let events = try store.events(in: interval(now: now, calendar: calendar))
     return timeline(
-      events: events, calendars: try store.calendars(), hasAccounts: !(try store.accounts()).isEmpty,
+      events: events, calendars: try store.calendars(),
+      hasAccounts: !(try store.accounts()).isEmpty,
       now: now, calendar: calendar, locale: .current, options: settings.agendaOptions,
       timeTemplate: settings.timeTemplate)
   }

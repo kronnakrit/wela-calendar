@@ -208,8 +208,9 @@ func mobileTextScale(_ size: DynamicTypeSize, setting: CGFloat) -> CGFloat {
                 isOn: Binding(get: { cal.isVisible }, set: { vm.setCalendarVisible(cal.id, $0) }))
             }
           } label: {
-            Image(systemName: vm.calendars.allSatisfy(\.isVisible)
-              ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+            Image(
+              systemName: vm.calendars.allSatisfy(\.isVisible)
+                ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
           }
           .accessibilityLabel("Calendar filter")
         }

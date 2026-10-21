@@ -74,7 +74,8 @@ final class WidgetSnapshotTests: XCTestCase {
     let timeline = WidgetSnapshot.timeline(
       events: events, calendars: [work], hasAccounts: true, now: at(14, 8), calendar: cal,
       locale: Locale(identifier: "en_US"), options: AgendaOptions(), timeTemplate: "Hm")
-    XCTAssertEqual(timeline.map(\.date), [at(14, 8), at(14, 9), at(14, 10), at(14, 15), at(14, 16), at(15, 0)])
+    XCTAssertEqual(
+      timeline.map(\.date), [at(14, 8), at(14, 9), at(14, 10), at(14, 15), at(14, 16), at(15, 0)])
     XCTAssertEqual(timeline[2].today.items.map(\.title), ["b"])
     XCTAssertEqual(timeline.last?.today.items, [])
   }

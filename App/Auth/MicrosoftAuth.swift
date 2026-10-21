@@ -1,11 +1,12 @@
+import MSAL
+import WelaCore
+import WelaSync
+
 #if os(macOS)
   import AppKit
 #else
   import UIKit
 #endif
-import MSAL
-import WelaCore
-import WelaSync
 
 /// Microsoft sign-in through MSAL, using the system browser sheet (no embedded web view).
 final class MicrosoftAuth: AccessTokenProvider, @unchecked Sendable {

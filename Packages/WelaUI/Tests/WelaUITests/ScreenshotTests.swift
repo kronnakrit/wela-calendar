@@ -67,7 +67,8 @@
         let phone = CompactCalendarLayout(vm: vm)
           .environment(\.welaTextScale, mobileTextScale(.large, setting: 1))
           .background(Theme.page)
-        try render(phone, size: NSSize(width: 390, height: 780), appearance, dir, "ios-phone-\(name)")
+        try render(
+          phone, size: NSSize(width: 390, height: 780), appearance, dir, "ios-phone-\(name)")
         let pad = RegularCalendarLayout(vm: vm)
           .environment(\.welaTextScale, mobileTextScale(.large, setting: 1))
           .background(Theme.page)

@@ -1,11 +1,12 @@
+import Security
+import WelaCore
+import WelaSync
+
 #if os(macOS)
   import AppKit
 #else
   import UIKit
 #endif
-import Security
-import WelaCore
-import WelaSync
 
 enum AuthError: LocalizedError {
   case notConfigured(String)
