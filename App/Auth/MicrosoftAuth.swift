@@ -1,4 +1,8 @@
-import AppKit
+#if os(macOS)
+  import AppKit
+#else
+  import UIKit
+#endif
 import MSAL
 import WelaCore
 import WelaSync
@@ -67,6 +71,15 @@ final class MicrosoftAuth: AccessTokenProvider, @unchecked Sendable {
       }
     }
   }
+
+  #if os(iOS)
+    /// Hands the redirect from the browser sheet or the Microsoft Authenticator app back to MSAL.
+    /// Call from `onOpenURL`; returns false for URLs that aren't MSAL's.
+    @discardableResult
+    static func handle(_ url: URL) -> Bool {
+      MSALPublicClientApplication.handleMSALResponse(url, sourceApplication: nil)
+    }
+  #endif
 
   /// Removes the account's cached tokens (used when the account is removed).
   func signOut(_ account: Account) {

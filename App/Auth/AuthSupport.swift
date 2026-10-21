@@ -1,4 +1,8 @@
-import AppKit
+#if os(macOS)
+  import AppKit
+#else
+  import UIKit
+#endif
 import Security
 import WelaCore
 import WelaSync
@@ -18,40 +22,60 @@ enum AuthError: LocalizedError {
   }
 }
 
-/// Browser-based sign-in needs a window to anchor to, but Wela is a menu bar app with none.
-/// This shows a tiny invisible window for the duration of a sign-in.
-@MainActor
-final class AuthPresenter {
-  private var window: NSWindow?
-  let viewController = NSViewController()
+#if os(macOS)
+  /// Browser-based sign-in needs a window to anchor to, but Wela is a menu bar app with none.
+  /// This shows a tiny invisible window for the duration of a sign-in.
+  @MainActor
+  final class AuthPresenter {
+    private var window: NSWindow?
+    let viewController = NSViewController()
 
-  init() {
-    viewController.view = NSView(frame: NSRect(x: 0, y: 0, width: 1, height: 1))
-  }
+    init() {
+      viewController.view = NSView(frame: NSRect(x: 0, y: 0, width: 1, height: 1))
+    }
 
-  var anchor: NSWindow {
-    if let window { return window }
-    let w = NSWindow(
-      contentRect: NSRect(x: 0, y: 0, width: 1, height: 1), styleMask: [.borderless],
-      backing: .buffered, defer: false)
-    w.contentViewController = viewController
-    w.alphaValue = 0
-    w.isReleasedWhenClosed = false
-    w.center()
-    window = w
-    return w
-  }
+    var anchor: NSWindow {
+      if let window { return window }
+      let w = NSWindow(
+        contentRect: NSRect(x: 0, y: 0, width: 1, height: 1), styleMask: [.borderless],
+        backing: .buffered, defer: false)
+      w.contentViewController = viewController
+      w.alphaValue = 0
+      w.isReleasedWhenClosed = false
+      w.center()
+      window = w
+      return w
+    }
 
-  func present() {
-    NSApp.activate(ignoringOtherApps: true)
-    anchor.orderFrontRegardless()
-  }
+    func present() {
+      NSApp.activate(ignoringOtherApps: true)
+      anchor.orderFrontRegardless()
+    }
 
-  func dismiss() {
-    window?.orderOut(nil)
-    window = nil
+    func dismiss() {
+      window?.orderOut(nil)
+      window = nil
+    }
   }
-}
+#else
+  /// On iOS the sign-in sheet is presented from the frontmost view controller.
+  @MainActor
+  final class AuthPresenter {
+    var viewController: UIViewController {
+      let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+      let window =
+        scenes.flatMap(\.windows).first(where: \.isKeyWindow) ?? scenes.first?.windows.first
+      var top = window?.rootViewController ?? UIViewController()
+      while let presented = top.presentedViewController { top = presented }
+      return top
+    }
+
+    var anchor: UIViewController { viewController }
+
+    func present() {}
+    func dismiss() {}
+  }
+#endif
 
 /// Minimal Keychain wrapper for refresh-token blobs (never written to disk elsewhere).
 enum Keychain {

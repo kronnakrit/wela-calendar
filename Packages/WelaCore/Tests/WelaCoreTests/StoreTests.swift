@@ -153,4 +153,28 @@ final class StoreTests: XCTestCase {
     let updated = await iterator.next()
     XCTAssertEqual(updated?.count, 1)
   }
+
+  func testReadOnlyStoreSeesWritesAndRejectsWrites() throws {
+    let path = FileManager.default.temporaryDirectory
+      .appendingPathComponent("wela-\(UUID().uuidString).sqlite").path
+    defer { try? FileManager.default.removeItem(atPath: path) }
+    let writer = try Store(path: path, observesSuspension: true)
+    try writer.saveAccount(account)
+    try writer.saveCalendars([cal1])
+    try writer.upsertEvents([event("a", h: 9)])
+
+    let reader = try Store(path: path, readOnly: true)
+    XCTAssertEqual(try reader.accounts(), [account])
+    XCTAssertEqual(try reader.events(in: october).map(\.providerEventId), ["a"])
+    XCTAssertThrowsError(try reader.upsertEvents([event("b", h: 10)]))
+
+    try writer.upsertEvents([event("b", h: 10)])
+    XCTAssertEqual(try reader.events(in: october).count, 2)
+  }
+
+  func testReadOnlyStoreNeedsAnExistingFile() {
+    let path = FileManager.default.temporaryDirectory
+      .appendingPathComponent("wela-missing-\(UUID().uuidString).sqlite").path
+    XCTAssertThrowsError(try Store(path: path, readOnly: true))
+  }
 }

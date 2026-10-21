@@ -1,3 +1,4 @@
+#if os(macOS)
 import SwiftUI
 import WelaCore
 
@@ -130,3 +131,4 @@ public struct SettingsView: View {
     .formStyle(.grouped)
   }
 }
+#endif

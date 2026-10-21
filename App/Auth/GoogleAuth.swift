@@ -1,5 +1,9 @@
 import AppAuth
-import AppKit
+#if os(macOS)
+  import AppKit
+#else
+  import UIKit
+#endif
 import WelaCore
 import WelaSync
 

@@ -158,6 +158,41 @@ public final class PanelViewModel: ObservableObject {
 
   public func tick() { now = Date() }
 
+  /// iOS: the app came to the foreground. Like reopening the panel, a long absence resets the
+  /// view to today; a deep link that arrived meanwhile (see `open(_:)`) wins.
+  public func appDidBecomeActive() {
+    now = Date()
+    if let closed = lastClosedAt, now.timeIntervalSince(closed) > rememberMonthFor {
+      goToToday()
+      detailEventID = nil
+    }
+    lastClosedAt = nil
+  }
+
+  /// iOS: the app went to the background.
+  public func appDidEnterBackground() { lastClosedAt = Date() }
+
+  /// Shows what a `wela://` link (from a widget) points at.
+  public func open(_ link: WelaLink) {
+    lastClosedAt = nil
+    now = Date()
+    searchText = ""
+    switch link {
+    case .day(let key):
+      guard let day = DayKey.date(from: key, timeZone: calendar.timeZone) else { return }
+      detailEventID = nil
+      select(day: day)
+    case .event(let id):
+      guard let event = event(id: id) else { return }
+      select(day: event.firstDay(in: calendar))
+      selectedEventID = id
+      detailEventID = id
+    case .join(let id):
+      guard let event = event(id: id) else { return }
+      join(event)
+    }
+  }
+
   // MARK: Derived state
 
   public var gridCells: [DayCell] {
@@ -356,6 +391,11 @@ public final class PanelViewModel: ObservableObject {
 
   public func refresh() {
     Task { await actions?.refresh() }
+  }
+
+  /// For pull to refresh, which waits for the sync to finish.
+  public func refreshAndWait() async {
+    await actions?.refresh()
   }
 
   // MARK: Search

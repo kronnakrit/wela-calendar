@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
   name: "WelaSync",
-  platforms: [.macOS(.v14)],
+  platforms: [.macOS(.v14), .iOS(.v17)],
   products: [.library(name: "WelaSync", targets: ["WelaSync"])],
   dependencies: [.package(path: "../WelaCore")],
   targets: [

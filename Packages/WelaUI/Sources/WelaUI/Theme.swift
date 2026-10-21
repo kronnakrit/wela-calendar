@@ -1,31 +1,69 @@
-import AppKit
 import SwiftUI
 
-extension NSColor {
+#if !os(macOS)
+  import UIKit
+  typealias PlatformColor = UIColor
+#else
+  import AppKit
+  typealias PlatformColor = NSColor
+#endif
+
+extension PlatformColor {
   convenience init(hex: UInt32, alpha: CGFloat = 1) {
-    self.init(
-      srgbRed: CGFloat((hex >> 16) & 0xFF) / 255, green: CGFloat((hex >> 8) & 0xFF) / 255,
-      blue: CGFloat(hex & 0xFF) / 255, alpha: alpha)
+    #if !os(macOS)
+      self.init(
+        red: CGFloat((hex >> 16) & 0xFF) / 255, green: CGFloat((hex >> 8) & 0xFF) / 255,
+        blue: CGFloat(hex & 0xFF) / 255, alpha: alpha)
+    #else
+      self.init(
+        srgbRed: CGFloat((hex >> 16) & 0xFF) / 255, green: CGFloat((hex >> 8) & 0xFF) / 255,
+        blue: CGFloat(hex & 0xFF) / 255, alpha: alpha)
+    #endif
   }
 
-  static func fromHexString(_ string: String) -> NSColor? {
+  static func fromHexString(_ string: String) -> PlatformColor? {
     let s = string.trimmingCharacters(in: CharacterSet(charactersIn: "# "))
     guard s.count == 6, let v = UInt32(s, radix: 16) else { return nil }
-    return NSColor(hex: v)
+    return PlatformColor(hex: v)
+  }
+
+  /// The colour in sRGB, so hue/saturation and RGB components can be read.
+  var srgb: PlatformColor? {
+    #if !os(macOS)
+      return self
+    #else
+      return usingColorSpace(.sRGB)
+    #endif
   }
 }
 
 extension Color {
   /// Colour that follows the system appearance (Paper / Night Paper).
   init(light: UInt32, dark: UInt32, lightAlpha: CGFloat = 1, darkAlpha: CGFloat = 1) {
-    self.init(
-      nsColor: NSColor(
-        name: nil,
-        dynamicProvider: { appearance in
-          let isDark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-          return isDark
-            ? NSColor(hex: dark, alpha: darkAlpha) : NSColor(hex: light, alpha: lightAlpha)
-        }))
+    #if !os(macOS)
+      self.init(
+        uiColor: UIColor { traits in
+          traits.userInterfaceStyle == .dark
+            ? UIColor(hex: dark, alpha: darkAlpha) : UIColor(hex: light, alpha: lightAlpha)
+        })
+    #else
+      self.init(
+        nsColor: NSColor(
+          name: nil,
+          dynamicProvider: { appearance in
+            let isDark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            return isDark
+              ? NSColor(hex: dark, alpha: darkAlpha) : NSColor(hex: light, alpha: lightAlpha)
+          }))
+    #endif
+  }
+
+  init(platformColor: PlatformColor) {
+    #if !os(macOS)
+      self.init(uiColor: platformColor)
+    #else
+      self.init(nsColor: platformColor)
+    #endif
   }
 }
 
@@ -52,24 +90,30 @@ public enum Theme {
 
   /// Calendar colour for dots and status marks. User-picked colours are desaturated by ~15%.
   public static func calendarColor(hex: String, desaturate: Bool = false) -> Color {
-    guard let ns = NSColor.fromHexString(hex)?.usingColorSpace(.sRGB) else { return softInk }
-    guard desaturate else { return Color(nsColor: ns) }
+    guard let c = PlatformColor.fromHexString(hex)?.srgb else { return softInk }
+    guard desaturate else { return Color(platformColor: c) }
     var h: CGFloat = 0
     var s: CGFloat = 0
     var b: CGFloat = 0
     var a: CGFloat = 0
-    ns.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
-    return Color(nsColor: NSColor(hue: h, saturation: s * 0.85, brightness: b, alpha: a))
+    c.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
+    return Color(
+      platformColor: PlatformColor(hue: h, saturation: s * 0.85, brightness: b, alpha: a))
   }
 }
 
 extension Color {
   /// "#RRGGBB" for a colour (used to store user colour overrides).
   var hexString: String {
-    let ns = NSColor(self).usingColorSpace(.sRGB) ?? .gray
+    let c = PlatformColor(self).srgb ?? PlatformColor(hex: 0x808080)
+    var r: CGFloat = 0
+    var g: CGFloat = 0
+    var b: CGFloat = 0
+    var a: CGFloat = 0
+    c.getRed(&r, green: &g, blue: &b, alpha: &a)
     return String(
-      format: "#%02X%02X%02X", Int((ns.redComponent * 255).rounded()),
-      Int((ns.greenComponent * 255).rounded()), Int((ns.blueComponent * 255).rounded()))
+      format: "#%02X%02X%02X", Int((min(max(r, 0), 1) * 255).rounded()),
+      Int((min(max(g, 0), 1) * 255).rounded()), Int((min(max(b, 0), 1) * 255).rounded()))
   }
 }
 
@@ -106,5 +150,16 @@ extension View {
 struct WelaAnimation {
   static func standard(reduceMotion: Bool) -> Animation? {
     reduceMotion ? nil : .easeOut(duration: 0.15)
+  }
+}
+
+extension View {
+  /// A bare icon or pill menu: borderless on the Mac, a plain button on iOS.
+  func welaMenuStyle() -> some View {
+    #if os(macOS)
+      self.menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+    #else
+      self.menuStyle(.button).buttonStyle(.plain).menuIndicator(.hidden).fixedSize()
+    #endif
   }
 }
