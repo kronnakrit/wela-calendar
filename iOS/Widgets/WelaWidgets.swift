@@ -18,7 +18,8 @@ struct AgendaWidget: Widget {
     }
     .configurationDisplayName("Up Next")
     .description(
-      "What's on now and what's coming up, with Join for online meetings. Also for StandBy.")
+      "What's on now and what's coming up, with Join for online meetings. Also for StandBy."
+    )
     .supportedFamilies([
       .systemSmall, .systemMedium, .systemLarge, .systemExtraLarge,
       .accessoryRectangular, .accessoryInline, .accessoryCircular,
