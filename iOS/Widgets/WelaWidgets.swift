@@ -17,7 +17,8 @@ struct AgendaWidget: Widget {
       SnapshotEntryView(entry: entry, style: .agenda)
     }
     .configurationDisplayName("Up Next")
-    .description("What's on now and what's coming up, with Join for online meetings.")
+    .description(
+      "What's on now and what's coming up, with Join for online meetings. Also for StandBy.")
     .supportedFamilies([
       .systemSmall, .systemMedium, .systemLarge, .systemExtraLarge,
       .accessoryRectangular, .accessoryInline, .accessoryCircular,
@@ -86,6 +87,8 @@ struct SnapshotEntryView: View {
   let entry: SnapshotEntry
   let style: Style
   @Environment(\.widgetFamily) private var family
+  /// False in StandBy, where the system removes the widget's background.
+  @Environment(\.showsWidgetContainerBackground) private var showsBackground
 
   var body: some View {
     content
@@ -112,7 +115,7 @@ struct SnapshotEntryView: View {
 
   private var layout: WidgetLayout {
     switch family {
-    case .systemSmall: return .small
+    case .systemSmall: return showsBackground ? .small : .standBy
     case .systemMedium: return .medium
     case .accessoryRectangular: return .accessoryRectangular
     case .accessoryInline: return .accessoryInline
@@ -121,7 +124,8 @@ struct SnapshotEntryView: View {
     }
   }
 
-  /// Small widgets are one tap target: the next event (agenda) or today (month).
+  /// Small, StandBy and Lock Screen widgets are one tap target: the next event (agenda) or
+  /// today (month).
   private var url: URL {
     if style == .agenda, let item = entry.snapshot.upNext, layout != .large, layout != .medium {
       return WelaLink.event(id: item.id).url

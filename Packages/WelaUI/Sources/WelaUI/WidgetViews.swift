@@ -6,6 +6,9 @@ import WelaCore
 public enum WidgetLayout: Sendable {
   case small, medium, large
   case accessoryRectangular, accessoryInline, accessoryCircular
+  /// A small widget in StandBy (iPhone on its side while charging): no background, read from
+  /// across the room, tinted red at night by the system.
+  case standBy
 
   /// Small widgets are a single tap target; only medium and large can hold links.
   var allowsLinks: Bool { self == .medium || self == .large }
@@ -28,6 +31,7 @@ public struct AgendaWidgetView: View {
     case .accessoryInline: AgendaInline(snapshot: snapshot)
     case .accessoryRectangular: AgendaRectangular(snapshot: snapshot)
     case .accessoryCircular: DateCircular(snapshot: snapshot)
+    case .standBy: AgendaStandBy(snapshot: snapshot)
     case .small, .medium, .large:
       if !snapshot.hasAccounts {
         WidgetSignInPrompt()
@@ -230,6 +234,80 @@ struct WidgetSignInPrompt: View {
   }
 }
 
+// MARK: StandBy
+
+private struct LiveTimesKey: EnvironmentKey { static let defaultValue = true }
+
+extension EnvironmentValues {
+  /// Countdowns tick live in widgets; screenshot tests turn this off to get fixed text.
+  public var welaWidgetLiveTimes: Bool {
+    get { self[LiveTimesKey.self] }
+    set { self[LiveTimesKey.self] = newValue }
+  }
+}
+
+/// Up Next for StandBy: one event, big, with a live countdown.
+struct AgendaStandBy: View {
+  let snapshot: WidgetSnapshot
+  @Environment(\.welaWidgetLiveTimes) private var liveTimes
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: 4) {
+      if !snapshot.hasAccounts {
+        Text("Wela").welaFont(26, weight: .semibold, serif: true).foregroundStyle(Theme.ink)
+        Text("Open Wela to connect your calendars.").welaFont(14).foregroundStyle(Theme.softInk)
+      } else if let item = snapshot.upNext {
+        let isNow = snapshot.isNow(item)
+        HStack(spacing: 6) {
+          Circle().fill(Theme.calendarColor(hex: item.colorHex)).frame(width: 9, height: 9)
+          Text(label(item, isNow: isNow))
+            .welaFont(13, weight: .bold).tracking(1).foregroundStyle(Theme.redPen)
+        }
+        Text(item.title)
+          .welaFont(24, weight: .semibold, serif: true)
+          .lineLimit(3).minimumScaleFactor(0.7)
+          .foregroundStyle(Theme.ink)
+        Spacer(minLength: 0)
+        Text(snapshot.timeRange(item)).welaFont(15, weight: .medium).monospacedDigit()
+          .foregroundStyle(Theme.ink)
+        if !item.isAllDay { countdown(item, isNow: isNow) }
+      } else {
+        Text("TODAY").welaFont(13, weight: .bold).tracking(1).foregroundStyle(Theme.redPen)
+        Text("Nothing else coming up").welaFont(22, weight: .semibold, serif: true)
+          .foregroundStyle(Theme.ink)
+        Spacer(minLength: 0)
+      }
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    .accessibilityElement(children: .combine)
+  }
+
+  private func label(_ item: WidgetItem, isNow: Bool) -> String {
+    if isNow { return "NOW" }
+    let day = snapshot.dayLabel(item.start)
+    return day == "TODAY" ? "NEXT" : day
+  }
+
+  @ViewBuilder
+  private func countdown(_ item: WidgetItem, isNow: Bool) -> some View {
+    let target = isNow ? item.end : item.start
+    Group {
+      if liveTimes {
+        if isNow {
+          Text("\(Text(target, style: .relative)) left")
+        } else {
+          Text("in \(Text(target, style: .relative))")
+        }
+      } else {
+        let minutes = max(0, Int((target.timeIntervalSince(snapshot.date) / 60).rounded(.up)))
+        Text(isNow ? "\(minutes) min left" : "in \(minutes) min")
+      }
+    }
+    .welaFont(13, weight: .semibold).monospacedDigit()
+    .foregroundStyle(isNow ? Theme.blueInk : Theme.softInk)
+  }
+}
+
 // MARK: Lock screen
 
 struct AgendaInline: View {
@@ -306,7 +384,7 @@ public struct MonthWidgetView: View {
 
   public var body: some View {
     switch layout {
-    case .small:
+    case .small, .standBy:
       MiniMonth(snapshot: snapshot, showsDots: true, dense: true)
     case .medium:
       HStack(alignment: .top, spacing: 14) {

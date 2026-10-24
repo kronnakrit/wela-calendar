@@ -81,6 +81,37 @@
         try render(
           WidgetGallery(snapshot: snapshot), size: NSSize(width: 800, height: 1010), appearance,
           dir, "ios-widgets-\(name)")
+
+        // Foldable iPhone (no simulator exists): the cover screen is phone-sized and compact;
+        // the inner screen is close to an iPad mini, so it gets the regular, side-by-side layout.
+        let scale = mobileTextScale(.large, setting: 1)
+        try render(
+          CompactCalendarLayout(vm: vm).environment(\.welaTextScale, scale)
+            .background(Theme.page),
+          size: NSSize(width: 360, height: 760), appearance, dir, "ios-fold-cover-\(name)")
+        try render(
+          RegularCalendarLayout(vm: vm).environment(\.welaTextScale, scale)
+            .background(Theme.page),
+          size: NSSize(width: 820, height: 980), appearance, dir, "ios-fold-inner-\(name)")
+        try render(
+          RegularCalendarLayout(vm: vm).environment(\.welaTextScale, scale)
+            .background(Theme.page),
+          size: NSSize(width: 980, height: 820), appearance, dir,
+          "ios-fold-inner-landscape-\(name)")
+
+        // StandBy is always dark: two small widgets side by side on a landscape iPhone.
+        if appearance == .darkAqua {
+          let standBy = HStack(spacing: 24) {
+            AgendaWidgetView(snapshot: snapshot, layout: .standBy)
+              .frame(width: 158, height: 158).scaleEffect(2.1).frame(width: 340, height: 340)
+            MonthWidgetView(snapshot: snapshot, layout: .standBy)
+              .frame(width: 158, height: 158).scaleEffect(2.1).frame(width: 340, height: 340)
+          }
+          .environment(\.welaWidgetLiveTimes, false)
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+          .background(Color.black)
+          try render(standBy, size: NSSize(width: 852, height: 393), appearance, dir, "ios-standby")
+        }
       }
     }
 

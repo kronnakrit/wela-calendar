@@ -9,7 +9,9 @@ packages as the Mac app. Requires iOS 17.
   - iPhone, and iPad in narrow Split View or Slide Over: month over agenda.
   - Full-width iPad: month on the left, the day's agenda on the right.
   - The layout follows the horizontal size class, so it also adapts to rotation and to larger
-    or foldable iPhone screens. Text follows Dynamic Type.
+    or foldable iPhone screens. Text follows Dynamic Type. There is no foldable iPhone
+    simulator yet, so the cover / inner screen previews (`ios-fold-*` on `ci-screenshots`) are
+    rendered at approximate sizes: cover 360×760 pt (compact), inner 820×980 pt (regular).
   - Search, calendar filter, settings sheet, event detail with Join and RSVP, pull to refresh.
   - Swipe the month grid left or right to change month.
 - **Widgets** (`iOS/Widgets`):
@@ -18,6 +20,9 @@ packages as the Mac app. Requires iOS 17.
     what comes next.
   - *Month*: small, medium, large and extra large. The month with today ringed, a dot per
     event, plus the next events on bigger sizes.
+  - *StandBy* (iPhone on its side while charging): the small Up Next widget switches to a
+    big, background-free layout with a live countdown; Month shows the month. iOS tints both
+    red at night.
   - Tapping an event opens it in the app (`wela://event?id=…`); tapping a day opens that day.
 - **Data**: the SQLite cache lives in the App Group container so the widget can read it
   (read-only). The app reloads widget timelines whenever events, calendars or settings change,
