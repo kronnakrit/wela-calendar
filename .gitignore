@@ -5,3 +5,6 @@ DerivedData/
 .swiftpm/
 xcuserdata/
 .DS_Store
+iOS/App/Info.plist
+iOS/Widgets/Info.plist
+build/

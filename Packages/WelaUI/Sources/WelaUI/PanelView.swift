@@ -168,7 +168,7 @@ struct FooterView: View {
       } label: {
         Image(systemName: "line.3.horizontal").frame(width: 24, height: 24)
       }
-      .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+      .welaMenuStyle()
       .accessibilityLabel("Menu")
       Spacer()
       Menu {
@@ -187,7 +187,7 @@ struct FooterView: View {
         .padding(.horizontal, 12).padding(.vertical, 5)
         .background(Capsule().fill(Theme.field))
       }
-      .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+      .welaMenuStyle()
       .accessibilityLabel("Calendar filter")
       Spacer()
       Button {
@@ -275,15 +275,19 @@ struct ReconnectBanner: View {
 struct EventDetailView: View {
   @ObservedObject var vm: PanelViewModel
   let event: EventInstance
+  /// False on iOS, where the card sits in a sheet with its own Done button.
+  var showsBackButton = true
 
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
-      Button {
-        vm.closeDetail()
-      } label: {
-        Label("Back", systemImage: "chevron.left").welaFont(12)
+      if showsBackButton {
+        Button {
+          vm.closeDetail()
+        } label: {
+          Label("Back", systemImage: "chevron.left").welaFont(12)
+        }
+        .buttonStyle(.plain).foregroundStyle(Theme.softInk)
       }
-      .buttonStyle(.plain).foregroundStyle(Theme.softInk)
       Text(event.title).welaFont(20, weight: .semibold, serif: true).foregroundStyle(Theme.ink)
       Text("\(vm.formatted(event.start, "EEEE d MMMM")) · \(vm.timeRange(for: event))")
         .welaFont(12).foregroundStyle(Theme.softInk)

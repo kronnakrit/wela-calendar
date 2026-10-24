@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
   name: "WelaUI",
-  platforms: [.macOS(.v14)],
+  platforms: [.macOS(.v14), .iOS(.v17)],
   products: [.library(name: "WelaUI", targets: ["WelaUI"])],
   dependencies: [.package(path: "../WelaCore"), .package(path: "../WelaSync")],
   targets: [

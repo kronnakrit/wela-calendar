@@ -1,7 +1,12 @@
 import AppAuth
-import AppKit
 import WelaCore
 import WelaSync
+
+#if os(macOS)
+  import AppKit
+#else
+  import UIKit
+#endif
 
 /// Google sign-in through AppAuth: authorization code + PKCE in the system browser.
 /// The refresh token (inside the archived `OIDAuthState`) lives only in the Keychain.

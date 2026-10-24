@@ -73,4 +73,31 @@ final class PanelViewModelTests: XCTestCase {
     vm.moveEventSelection(by: -5)
     XCTAssertEqual(vm.selectedEventID, "\(calInfo.id):1")
   }
+
+  func testOpenWidgetLinks() throws {
+    let (vm, store) = try makeVM()
+    let calInfo = CalendarInfo(
+      accountId: "a", providerCalendarId: "c", name: "C", providerColorHex: "#3D5A96")
+    try store.saveAccount(Account(id: "a", provider: .mock, email: "x", displayName: "x"))
+    try store.saveCalendars([calInfo])
+    let start = cal.date(from: DateComponents(year: 2026, month: 11, day: 2, hour: 9))!
+    try store.upsertEvents([
+      EventInstance(
+        calendarId: calInfo.id, providerEventId: "1", title: "One", start: start,
+        end: start.addingTimeInterval(3600))
+    ])
+
+    vm.open(.event(id: "\(calInfo.id):1"))
+    XCTAssertEqual(vm.monthName, "November")
+    XCTAssertEqual(cal.component(.day, from: vm.selectedDay), 2)
+    XCTAssertEqual(vm.detailEventID, "\(calInfo.id):1")
+
+    vm.open(.day("2026-12-25"))
+    XCTAssertEqual(vm.monthName, "December")
+    XCTAssertEqual(cal.component(.day, from: vm.selectedDay), 25)
+    XCTAssertNil(vm.detailEventID)
+
+    vm.open(.event(id: "missing"))
+    XCTAssertEqual(vm.monthName, "December")
+  }
 }

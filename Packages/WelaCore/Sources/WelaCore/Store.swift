@@ -11,13 +11,34 @@ public final class Store: @unchecked Sendable {
   public let dbQueue: DatabaseQueue
 
   /// Pass `nil` for an in-memory database (tests, mock data).
-  public init(path: String? = nil) throws {
+  ///
+  /// - `readOnly`: opens an existing database without migrating it (the iOS widget reads the
+  ///   app's database from the shared App Group container this way).
+  /// - `observesSuspension`: set for a database in an App Group container on iOS, so the app can
+  ///   release its locks with `Store.suspend()` before it is suspended (avoids 0xdead10cc kills).
+  public init(path: String? = nil, readOnly: Bool = false, observesSuspension: Bool = false) throws
+  {
+    var config = Configuration()
+    config.readonly = readOnly
+    config.observesSuspensionNotifications = observesSuspension
+    // The app and the widget extension can touch the same file at once.
+    config.busyMode = .timeout(3)
     if let path {
-      dbQueue = try DatabaseQueue(path: path)
+      dbQueue = try DatabaseQueue(path: path, configuration: config)
     } else {
-      dbQueue = try DatabaseQueue()
+      dbQueue = try DatabaseQueue(configuration: config)
     }
-    try Store.migrator.migrate(dbQueue)
+    if !readOnly { try Store.migrator.migrate(dbQueue) }
+  }
+
+  /// Tells every store opened with `observesSuspension` to release its file locks (app is about
+  /// to be suspended). Pair with `resume()`.
+  public static func suspend() {
+    NotificationCenter.default.post(name: Database.suspendNotification, object: nil)
+  }
+
+  public static func resume() {
+    NotificationCenter.default.post(name: Database.resumeNotification, object: nil)
   }
 
   // MARK: Migrations
