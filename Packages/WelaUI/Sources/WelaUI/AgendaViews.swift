@@ -51,6 +51,8 @@ struct AgendaRow: View {
   @ObservedObject var vm: PanelViewModel
   let item: AgendaItem
   let isSelected: Bool
+  /// Off in the now card, where the Join button takes the icon's place.
+  var showsConferenceIcon = true
 
   var body: some View {
     let e = item.event
@@ -75,7 +77,9 @@ struct AgendaRow: View {
         }
       }
       Spacer(minLength: 4)
-      if e.joinURL != nil && !item.isCancelled { ConferenceIcon(kind: e.conferenceKind) }
+      if showsConferenceIcon && e.joinURL != nil && !item.isCancelled {
+        ConferenceIcon(kind: e.conferenceKind)
+      }
     }
     .padding(.vertical, 8)
     .padding(.horizontal, 6)
@@ -131,26 +135,27 @@ struct NowCard: View {
 
   var body: some View {
     let e = item.event
-    VStack(alignment: .leading, spacing: 8) {
-      AgendaRow(vm: vm, item: item, isSelected: false)
-      HStack {
+    HStack(spacing: 8) {
+      VStack(alignment: .leading, spacing: 0) {
+        AgendaRow(vm: vm, item: item, isSelected: false, showsConferenceIcon: false)
         Text("\(vm.minutesLeft(e)) min left").welaFont(11.5, weight: .semibold)
           .foregroundStyle(Theme.blueInk)
-        Spacer()
-        if e.joinURL != nil {
-          Button {
-            vm.join(e)
-          } label: {
-            Text("Join").welaFont(12, weight: .semibold).foregroundStyle(Theme.onBlue)
-              .padding(.horizontal, 16).padding(.vertical, 5)
-              .background(Capsule().fill(Theme.blueInk))
-          }
-          .buttonStyle(.plain)
-          .accessibilityLabel("Join \(e.title)")
-        }
+          // Line up with the title column: row padding 6 + status mark 11 + spacing 10.
+          .padding(.leading, 27).padding(.bottom, 8)
       }
-      // Line up with the title column: row padding 6 + status mark 11 + spacing 10.
-      .padding(.leading, 27).padding(.trailing, 6)
+      if e.joinURL != nil {
+        // Vertically centred on the card's right edge.
+        Button {
+          vm.join(e)
+        } label: {
+          Text("Join").welaFont(12, weight: .semibold).foregroundStyle(Theme.onBlue)
+            .padding(.horizontal, 16).padding(.vertical, 5)
+            .background(Capsule().fill(Theme.blueInk))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Join \(e.title)")
+        .padding(.trailing, 10)
+      }
     }
     .padding(.vertical, 4)
     .background(
