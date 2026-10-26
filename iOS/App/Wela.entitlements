@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Shared with the widget extension: the SQLite cache and settings. -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>$(WELA_APP_GROUP)</string>
+	</array>
+	<!-- The app's own group first, so Wela's Keychain items stay private to it; then MSAL's
+	     token cache group on iOS. -->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+		<string>$(AppIdentifierPrefix)com.microsoft.adalcache</string>
+	</array>
+</dict>
+</plist>
