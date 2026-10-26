@@ -149,7 +149,8 @@ struct NowCard: View {
           .accessibilityLabel("Join \(e.title)")
         }
       }
-      .padding(.horizontal, 6)
+      // Line up with the title column: row padding 6 + status mark 11 + spacing 10.
+      .padding(.leading, 27).padding(.trailing, 6)
     }
     .padding(.vertical, 4)
     .background(
