@@ -81,6 +81,34 @@ jobs:
           git commit -qm "iOS screenshots for ${GITHUB_SHA}"
           git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-screenshots-ios
 
+  # Foldable iPhone simulator: needs the newest Xcode on the runner; advisory until it settles.
+  ios-foldable:
+    runs-on: macos-15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools
+        run: brew install xcodegen
+      - name: Generate project
+        run: cp Config/Secrets.example.xcconfig Config/Secrets.xcconfig && xcodegen generate
+      - name: Foldable screenshots
+        run: scripts/ios-fold-screenshots.sh fold-screenshots
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fold-screenshots
+          path: fold-screenshots/*.png
+          if-no-files-found: warn
+      - name: Publish foldable screenshots branch
+        if: github.event_name == 'push' && hashFiles('fold-screenshots/*.png') != ''
+        run: |
+          cd fold-screenshots
+          git init -q -b ci-screenshots-fold
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add *.png
+          git commit -qm "Foldable screenshots for ${GITHUB_SHA}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ci-screenshots-fold
+
   lint:
     runs-on: macos-15
     continue-on-error: true # advisory until the formatting baseline is clean
